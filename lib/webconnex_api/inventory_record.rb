@@ -35,7 +35,24 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # is in the event TZ... =D
     # We could allow the user to configure this class with a TZ name to assume,
     # like "America/New_York"
+    if event_has_date_but_no_time?
+      raise "This Inventory Record does not have a time " +
+            "(name: #{name.inspect}, key: #{key.inspect})"
+    end
+
     @event_time ||= Time.strptime(key, "%Y-%m-%d %H:%M")
+  end
+
+  def event_date
+    if event_has_date_but_no_time?
+      Time.strptime(key, "%Y-%m-%d").to_date
+    else
+      event_time.to_date
+    end
+  end
+
+  def event_has_date_but_no_time?
+    key =~ /^\d\d\d\d-\d\d-\d\d$/
   end
 
   def single_performance_total_sales_record?
