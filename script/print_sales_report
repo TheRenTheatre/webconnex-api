@@ -8,6 +8,14 @@ require 'rubygems'
 gem 'activesupport', '~> 7.0'
 require 'active_support/core_ext/object/blank'
 
+if ENV["VERBOSE"].present?
+  require 'logger'
+
+  require 'http_logger'
+  HttpLogger.logger = Logger.new($stdout)
+  HttpLogger.log_headers = true
+end
+
 if ENV["WEBCONNEX_API_KEY"].blank?
   raise "Error: environment missing WEBCONNEX_API_KEY"
 end
