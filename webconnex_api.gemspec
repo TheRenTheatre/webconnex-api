@@ -9,9 +9,9 @@ Gem::Specification.new do |s|
   s.description = "An API client for Webconnex, initially built to retrieve " +
                   "data from TicketSpice. See https://docs.webconnex.io/api/v2/"
 
-  s.homepage = "https://github.com/therentheatre/webconnex-api"
+  s.homepage = "https://github.com/therentheatre/webconnex_api"
   s.metadata = {
-    "source_code_uri" => "https://github.com/therentheatre/webconnex-api"
+    "source_code_uri" => "https://github.com/therentheatre/webconnex_api"
   }
 
   root_docs = %w(LICENSE README.md)
