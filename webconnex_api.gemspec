@@ -17,4 +17,7 @@ Gem::Specification.new do |s|
   root_docs = %w(LICENSE README.md)
   s.extra_rdoc_files = root_docs
   s.files = Dir["lib/**/*.rb"] + root_docs
+
+  # Gem dependencies are auto-discovered from the Gemfile
+  # (more info: `gem help gem_dependencies`)
 end
