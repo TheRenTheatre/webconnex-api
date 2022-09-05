@@ -32,7 +32,7 @@ end
 
 def print_inventory_report_for_show_name(name)
   forms = WebconnexAPI::Form.all
-  shows = forms.select { |f| f.name == name }.reverse
+  shows = forms.select { |f| f.name == name && f.published? }.reverse
 
   if shows.none?
     $stderr.puts "No published shows found called #{name.inspect}\n\n"

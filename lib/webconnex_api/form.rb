@@ -24,4 +24,8 @@ class WebconnexAPI::Form < OpenStruct
   def closed?
     status == "closed"
   end
+
+  def published?
+    !publishedPath.nil?
+  end
 end
