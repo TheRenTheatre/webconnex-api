@@ -23,9 +23,11 @@ WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 
 
 def main
-  ARGV.each do |show_name|
+  successes = ARGV.map do |show_name|
     print_inventory_report_for_show_name(show_name)
   end
+  exit 0 if successes.all?
+  exit 1
 end
 
 def print_inventory_report_for_show_name(name)
@@ -33,7 +35,8 @@ def print_inventory_report_for_show_name(name)
   shows = forms.select { |f| f.name == name }.reverse
 
   if shows.none?
-    raise "No shows found called #{name.inspect}\n\n"
+    $stderr.puts "No published shows found called #{name.inspect}\n\n"
+    return false
   end
 
   shows.each do |show|
