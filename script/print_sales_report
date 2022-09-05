@@ -25,34 +25,40 @@ WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 def main
   ARGV.each do |show_name|
     print_inventory_report_for_show_name(show_name)
-    puts "\n\n"
   end
 end
 
 def print_inventory_report_for_show_name(name)
   forms = WebconnexAPI::Form.all
-  show = forms.find { |f| f.name == name }
-  raise "No show found called #{name.inspect}" if show.nil?
+  shows = forms.select { |f| f.name == name }.reverse
 
-  puts "#{name}:\n\n"
+  if shows.none?
+    raise "No shows found called #{name.inspect}\n\n"
+  end
 
-  last_date = nil
-  show.inventory_records.sort_by(&:event_time).each do |ir|
-    this_date = ir.event_time.to_date
-    if !last_date.nil? && this_date - last_date > 1
-      puts "\n\n"
-    elsif !last_date.nil? && this_date != last_date
-      puts
+  shows.each do |show|
+    puts "#{name}:\n\n"
+
+    last_date = nil
+    show.inventory_records.sort_by(&:event_time).each do |ir|
+      this_date = ir.event_time.to_date
+      if !last_date.nil? && this_date - last_date > 1
+        puts "\n\n"
+      elsif !last_date.nil? && this_date != last_date
+        puts
+      end
+      if last_date.nil? || last_date != this_date
+        print this_date.strftime("    %a, %b %e at ")
+      elsif last_date == this_date
+        print "                   "
+      end
+
+      print ir.event_time.strftime("%l:%M%P: ")
+      puts "#{ir.sold.to_s.rjust(ir.quantity.to_s.length)} / #{ir.quantity}"
+      last_date = this_date
     end
-    if last_date.nil? || last_date != this_date
-      print this_date.strftime("    %a, %b %e at ")
-    elsif last_date == this_date
-      print "                   "
-    end
 
-    print ir.event_time.strftime("%l:%M%P: ")
-    puts "#{ir.sold.to_s.rjust(ir.quantity.to_s.length)} / #{ir.quantity}"
-    last_date = this_date
+    puts "\n\n"
   end
 end
 
