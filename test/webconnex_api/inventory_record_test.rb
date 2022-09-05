@@ -2,7 +2,7 @@
 
 require 'test_helper'
 
-class TestWebconnexAPIInventoryRecord < Test::Unit::TestCase
+class TestWebconnexAPIInventoryRecord < Minitest::Test
   def test_all_by_form_id_does_not_raise
     # plaintext
     # curl --http1.1 -X "GET" -is "https://api.webconnex.com/v2/public/forms/481603/inventory" -H "apiKey: ffff084aa7abee86fc0203e606faffff" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > test/fixtures/v2-public-forms-481603-inventory
