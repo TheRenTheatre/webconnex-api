@@ -1,9 +1,13 @@
+# frozen_string_literal: true
+
 require 'net/http'
 require 'json'
 require 'date'
 require 'time'
 
 module WebconnexAPI
+  class Error < StandardError; end
+
   ENDPOINT = "https://api.webconnex.com/v2/public"
 
   def self.get_request(path)
@@ -18,5 +22,6 @@ module WebconnexAPI
   end
 end
 
-require 'webconnex_api/form'
-require 'webconnex_api/inventory_record'
+require_relative 'webconnex_api/form'
+require_relative 'webconnex_api/inventory_record'
+require_relative 'webconnex_api/version'

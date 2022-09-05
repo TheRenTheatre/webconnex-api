@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This is just a thin wrapper around the API's data structure which is a little
 # heterogeneous. There's one Inventory Record for the Form's overall capacity
 # (called 'quantity'); plus one for each ticket level's quantity, but only when

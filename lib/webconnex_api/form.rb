@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class WebconnexAPI::Form < OpenStruct
   def self.all
     json = WebconnexAPI.get_request("/forms")
