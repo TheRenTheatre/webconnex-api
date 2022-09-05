@@ -43,7 +43,7 @@ def print_inventory_report_for_show_name(name)
     end
 
     print ir.event_time.strftime("%l:%M%P: ")
-    puts "#{ir.sold.to_s.rjust(2)} / #{ir.quantity}"
+    puts "#{ir.sold.to_s.rjust(ir.quantity.to_s.length)} / #{ir.quantity}"
     last_date = this_date
   end
 end
