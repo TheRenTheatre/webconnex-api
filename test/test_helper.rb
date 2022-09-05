@@ -6,6 +6,7 @@ Bundler.require(:default, :test)
 require 'webconnex_api'
 
 require 'minitest/autorun'
+require 'minitest/pride'
 
 
 module WebconnexAPITestHelper
