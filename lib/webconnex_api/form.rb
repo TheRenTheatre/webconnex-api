@@ -4,6 +4,11 @@ class WebconnexAPI::Form < OpenStruct
     JSON.parse(json, object_class: self).data
   end
 
+  def self.find(id)
+    json = WebconnexAPI.get_request("/forms/#{id}")
+    JSON.parse(json, object_class: self).data
+  end
+
   def inventory_records
     WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
