@@ -43,7 +43,12 @@ def print_inventory_report_for_show_name(name)
     puts "#{name}:\n\n"
 
     last_date = nil
-    show.inventory_records.sort_by(&:event_time).each do |ir|
+    irs = show.inventory_records.
+            select(&:single_performance_total_sales_record?).
+            sort_by(&:event_time)
+    irs.each do |ir|
+      next if ir.sold == 0
+
       this_date = ir.event_time.to_date
       if !last_date.nil? && this_date - last_date > 1
         puts "\n\n"
