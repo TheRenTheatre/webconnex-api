@@ -1,5 +1,6 @@
 class WebconnexAPI::InventoryRecord < OpenStruct
   def self.all_by_form_id(form_id)
+    # TODO: this fails for unpublished forms (see fixture 481580)
     json = WebconnexAPI.get_request("/forms/#{form_id}/inventory")
     JSON.parse(json, object_class: self).data.reject { |ir|
       ir.name == "tickets"

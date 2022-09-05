@@ -1,0 +1,15 @@
+HTTP/1.1 400 Bad Request
+Date: Mon, 05 Sep 2022 11:31:42 GMT
+Content-Type: application/json; charset=UTF-8
+Content-Length: 106
+Connection: keep-alive
+Server: nginx/1.17.10
+Access-Control-Expose-Headers: 
+X-Burst-Limit: 900
+X-Burst-Limit-Reset: 1662377532
+X-Burst-Remaining: 899
+X-Daily-Limit: 10000
+X-Daily-Limit-Reset: 1662422399
+X-Daily-Remaining: 9875
+
+{"responseCode":400,"error":{"code":8400,"description":"inventory not generated till form is published"}}

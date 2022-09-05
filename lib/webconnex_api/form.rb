@@ -10,6 +10,10 @@ class WebconnexAPI::Form < OpenStruct
   end
 
   def inventory_records
+    # API responds with a 400 if you do this:
+    # "inventory not generated till form is published"
+    raise "Cannot retrieve inventory records for an unpublished form" if !published?
+
     WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
 

@@ -7,6 +7,7 @@ class TestWebconnexAPIForm < Test::Unit::TestCase
   # Useful fixtures:
   # 481580 - unpublished, archived form with same name as a published one
   # 481581 - the published one
+  # 481603 - one where we have inventory records fixtures as well (Lenox Ave)
 
   def test_form_find_does_not_raise
     resp = fixture_path("v2-public-forms-481581")
@@ -28,5 +29,26 @@ class TestWebconnexAPIForm < Test::Unit::TestCase
     form = WebconnexAPI::Form.find(481581)
     assert !form["publishedPath"].nil?
     assert form.published?
+  end
+
+  def test_inventory_records_accessor_returns_the_same_collection_as_a_direct_call
+    resp = fixture_path("v2-public-forms-481603")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603", :response => resp)
+    form = WebconnexAPI::Form.find(481603)
+
+    resp = fixture_path("v2-public-forms-481603-inventory")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603/inventory", :response => resp)
+    expected = WebconnexAPI::InventoryRecord.all_by_form_id(481603)
+    assert_instance_of WebconnexAPI::InventoryRecord, expected.first
+    assert_equal expected, form.inventory_records
+  end
+
+  def test_inventory_records_accessor_raises_when_unpublished
+    resp = fixture_path("v2-public-forms-481580")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481580", :response => resp)
+    form = WebconnexAPI::Form.find(481580)
+    assert_raises do
+      form.inventory_records
+    end
   end
 end
