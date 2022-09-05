@@ -5,17 +5,17 @@ class TestWebconnexAPIForm < Test::Unit::TestCase
   # curl --http1.1 -X "GET" -is "https://api.webconnex.com/v2/public/forms/$ID" -H "apiKey: $WEBCONNEX_API_KEY" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > test/fixtures/v2-public-forms-$ID
   #
   # Useful fixtures:
-  # 481580 - unpublished, archived form with same name as a published one
+  # 481580 - unpublished, archived form with same name as a published one (Bullock and the Bandits)
   # 481581 - the published one
   # 481603 - one where we have inventory records fixtures as well (Lenox Ave)
 
-  def test_form_find_does_not_raise
+  def test_find_does_not_raise
     resp = fixture_path("v2-public-forms-481581")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481580", :response => resp)
     WebconnexAPI::Form.find(481580)
   end
 
-  def test_form_published_returns_false_when_published_path_is_missing
+  def test_published_returns_false_when_published_path_is_missing
     resp = fixture_path("v2-public-forms-481580")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481580", :response => resp)
     form = WebconnexAPI::Form.find(481580)
@@ -23,7 +23,7 @@ class TestWebconnexAPIForm < Test::Unit::TestCase
     assert !form.published?
   end
 
-  def test_form_published_returns_true_when_published_path_is_present
+  def test_published_returns_true_when_published_path_is_present
     resp = fixture_path("v2-public-forms-481581")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481581", :response => resp)
     form = WebconnexAPI::Form.find(481581)
