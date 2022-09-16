@@ -19,6 +19,19 @@ class WebconnexAPI::Form < OpenStruct
     @inventory_records ||= WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
 
+  def first_performance_date
+    # This is actually the date of the first performance with any tickets sold
+    inventory_records.
+      select(&:single_performance_total_sales_record?).
+      map(&:event_date).sort.first
+  end
+
+  def total_tickets_sold
+    inventory_records.
+      select(&:single_performance_total_sales_record?).
+      sum(&:sold)
+  end
+
   def archived?
     status == "archived"
   end

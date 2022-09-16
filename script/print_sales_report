@@ -41,7 +41,7 @@ def print_inventory_report_for_show_name(name)
   end
 
   shows.each do |show|
-    puts "#{name}:\n\n"
+    puts "#{show.name} (#{show.first_performance_date.year}):\n\n"
 
     last_date = nil
     irs = show.inventory_records.
@@ -75,7 +75,7 @@ def print_inventory_report_for_show_name(name)
       last_date = this_date
     end
 
-    puts "\n\n"
+    puts "\n\n    Total sold: #{show.total_tickets_sold}\n\n\n"
   end
 end
 
