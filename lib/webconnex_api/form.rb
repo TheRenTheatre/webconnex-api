@@ -16,7 +16,7 @@ class WebconnexAPI::Form < OpenStruct
     # "inventory not generated till form is published"
     raise "Cannot retrieve inventory records for an unpublished form" if !published?
 
-    WebconnexAPI::InventoryRecord.all_by_form_id(id)
+    @inventory_records ||= WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
 
   def archived?

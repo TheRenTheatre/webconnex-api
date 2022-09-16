@@ -53,4 +53,16 @@ class TestWebconnexAPIForm < Minitest::Test
       form.inventory_records
     end
   end
+
+  def test_inventory_records_accessor_only_makes_api_request_once
+    resp = fixture_path("v2-public-forms-481603")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603", :response => resp)
+    form = WebconnexAPI::Form.find(481603)
+
+    resp = fixture_path("v2-public-forms-481603-inventory")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603/inventory",
+                         [{:response => resp}, {:exception => StandardError}])
+    form.inventory_records
+    form.inventory_records
+  end
 end
