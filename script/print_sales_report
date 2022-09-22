@@ -75,7 +75,9 @@ def print_inventory_report_for_show_name(name)
       last_date = this_date
     end
 
-    puts "\n\n    Total sold: #{show.total_tickets_sold}\n\n\n"
+    puts "\n\n"
+    percent_sold = show.total_tickets_sold.to_f / show.total_tickets_available * 100
+    puts "    Total sold: #{show.total_tickets_sold} / #{show.total_tickets_available} (#{percent_sold.round(1)}%)\n\n"
   end
 end
 

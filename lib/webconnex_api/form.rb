@@ -32,6 +32,15 @@ class WebconnexAPI::Form < OpenStruct
       sum(&:sold)
   end
 
+  def total_tickets_available
+    # n.b. the 'quantity' fields change retrospectively when you adjust in the web
+    # interface. So be careful making assumptions about old shows if you increase
+    # capacity during a run.
+    inventory_records.
+      select(&:single_performance_total_sales_record?).
+      sum(&:quantity)
+  end
+
   def archived?
     status == "archived"
   end
