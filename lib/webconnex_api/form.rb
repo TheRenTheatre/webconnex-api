@@ -41,6 +41,17 @@ class WebconnexAPI::Form < OpenStruct
       sum(&:quantity)
   end
 
+  def ticket_level_names
+    # TODO temporary (lol). We obviously need some sort of loading mechanism
+    # here. The List Forms API used in .all doesn't include all of the data a
+    # Form can have.
+    if fields.nil?
+      myself = self.class.find(id)
+      fields = myself.fields
+    end
+    fields["tickets"]["levels"].map { |l| l["attributes"]["label"] }
+  end
+
   def archived?
     status == "archived"
   end
