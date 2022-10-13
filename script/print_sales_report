@@ -44,17 +44,17 @@ def print_inventory_report_for_show_name(name)
     puts "#{show.name} (#{show.first_performance_date.year}):\n\n"
 
     last_date = nil
-    irs = show.inventory_records.
-            select(&:single_performance_total_sales_record?).
-            sort_by { |ir|
-              ir.event_has_date_but_no_time? ?
-                ir.event_date.to_time :
-                ir.event_time
-            }
-    irs.each do |ir|
-      next if ir.sold == 0
+    total_irs = show.inventory_records.
+                  select(&:single_performance_total_sales_record?).
+                  sort_by { |total_ir|
+                    total_ir.event_has_date_but_no_time? ?
+                      total_ir.event_date.to_time :
+                      total_ir.event_time
+                  }
+    total_irs.each do |total_ir|
+      next if total_ir.sold == 0
 
-      this_date = ir.event_date
+      this_date = total_ir.event_date
       if !last_date.nil? && this_date - last_date > 1
         puts "\n\n"
       elsif !last_date.nil? && this_date != last_date
@@ -66,12 +66,12 @@ def print_inventory_report_for_show_name(name)
         print "                   "
       end
 
-      if ir.event_has_date_but_no_time?
+      if total_ir.event_has_date_but_no_time?
         print "no time: "
       else
-        print ir.event_time.strftime("%l:%M%P: ")
+        print total_ir.event_time.strftime("%l:%M%P: ")
       end
-      puts "#{ir.sold.to_s.rjust(ir.quantity.to_s.length)} / #{ir.quantity}"
+      puts "#{total_ir.sold.to_s.rjust(total_ir.quantity.to_s.length)} / #{total_ir.quantity}"
       last_date = this_date
     end
 
