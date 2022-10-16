@@ -72,4 +72,17 @@ class TestWebconnexAPIForm < Minitest::Test
     form = WebconnexAPI::Form.find(481603)
     assert_equal ["General Admission", "Standing Room Only"], form.ticket_level_names
   end
+
+  def test_ticket_level_names_when_fields_arent_loaded
+    resp = fixture_path("v2-public-forms-all")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms", :response => resp)
+    forms = WebconnexAPI::Form.all
+
+    form = forms.find { |f| f.id == 481603 }
+
+    resp = fixture_path("v2-public-forms-481603")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603", :response => resp)
+
+    assert_equal ["General Admission", "Standing Room Only"], form.ticket_level_names
+  end
 end

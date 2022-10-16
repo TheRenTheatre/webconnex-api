@@ -45,11 +45,11 @@ class WebconnexAPI::Form < OpenStruct
     # TODO temporary (lol). We obviously need some sort of loading mechanism
     # here. The List Forms API used in .all doesn't include all of the data a
     # Form can have.
-    if fields.nil?
+    if self[:fields].nil?
       myself = self.class.find(id)
-      fields = myself.fields
+      self[:fields] = myself.fields
     end
-    fields["tickets"]["levels"].map { |l| l["attributes"]["label"] }
+    self[:fields]["tickets"]["levels"].map { |l| l["attributes"]["label"] }
   end
 
   def archived?
