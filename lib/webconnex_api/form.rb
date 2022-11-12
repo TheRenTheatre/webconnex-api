@@ -35,11 +35,27 @@ class WebconnexAPI::Form < OpenStruct
     inventory_records_for_sales_stats.sum(&:sold)
   end
 
+  def total_upcoming_tickets_sold
+    inventory_records_for_sales_stats.select(&:upcoming?).sum(&:sold)
+  end
+
+  def total_past_tickets_sold
+    inventory_records_for_sales_stats.select(&:past?).sum(&:sold)
+  end
+
   def total_tickets_available
     # n.b. the 'quantity' fields change retrospectively when you adjust in the web
     # interface. So be careful making assumptions about old shows if you increase
     # capacity during a run.
     inventory_records_for_sales_stats.sum(&:quantity)
+  end
+
+  def total_upcoming_tickets_available
+    inventory_records_for_sales_stats.select(&:upcoming?).sum(&:quantity)
+  end
+
+  def total_past_tickets_available
+    inventory_records_for_sales_stats.select(&:past?).sum(&:quantity)
   end
 
   def ticket_level_names

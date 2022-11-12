@@ -76,8 +76,17 @@ def print_inventory_report_for_show_name(name)
     end
 
     puts "\n\n"
-    percent_sold = show.total_tickets_sold.to_f / show.total_tickets_available * 100
-    puts "    Total sold: #{show.total_tickets_sold} / #{show.total_tickets_available} (#{percent_sold.round(1)}%)\n\n"
+    past_percent_sold     = (show.total_past_tickets_sold.to_f     / show.total_past_tickets_available     * 100).round(1)
+    upcoming_percent_sold = (show.total_upcoming_tickets_sold.to_f / show.total_upcoming_tickets_available * 100).round(1)
+    total_percent_sold    = (show.total_tickets_sold.to_f          / show.total_tickets_available          * 100).round(1)
+
+    width = show.total_tickets_available.to_s.length
+    format_string = "    %13s: %#{width}d / %#{width}d (%.1f%%)"
+    puts format_string % ["Past sold",     show.total_past_tickets_sold,     show.total_past_tickets_available,     past_percent_sold]
+    puts format_string % ["Upcoming sold", show.total_upcoming_tickets_sold, show.total_upcoming_tickets_available, upcoming_percent_sold]
+    puts
+    puts format_string % ["Total",         show.total_tickets_sold,          show.total_tickets_available,          total_percent_sold]
+    puts "\n\n"
   end
 end
 

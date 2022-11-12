@@ -53,6 +53,18 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     end
   end
 
+  def upcoming?
+    if event_has_date_but_no_time?
+      event_date >= Date.today
+    else
+      event_time >= Time.now
+    end
+  end
+
+  def past?
+    !upcoming?
+  end
+
   # When you put a show on sale, sell tickets, then later move/refund all the
   # orders and hide the show using an Action, you'll still get an Inventory
   # Record back showing zero tickets sold. This doesn't happen for shows that
