@@ -14,4 +14,16 @@ class TestWebconnexAPIInventoryRecord < Minitest::Test
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603/inventory", :response => resp)
     WebconnexAPI::InventoryRecord.all_by_form_id(481603)
   end
+
+  def test_upcoming_and_past
+    resp = fixture_path("v2-public-forms-481603")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603", :response => resp)
+    resp = fixture_path("v2-public-forms-481603-inventory")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603/inventory", :response => resp)
+
+    irs = WebconnexAPI::InventoryRecord.all_by_form_id(481603).select(&:single_performance_sales_record?)
+    irs.each do |ir|
+      refute_equal ir.upcoming?, ir.past
+    end
+  end
 end

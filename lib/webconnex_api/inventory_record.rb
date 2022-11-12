@@ -79,11 +79,15 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     key =~ /^\d\d\d\d-\d\d-\d\d$/
   end
 
+  def single_performance_sales_record?
+    !key.nil?
+  end
+
   def single_performance_total_sales_record?
-    !key.nil? && path == "tickets"
+    single_performance_sales_record? && path == "tickets"
   end
 
   def single_performance_ticket_level_sales_record?
-    !key.nil? && path.starts_with?("tickets.")
+    single_performance_sales_record? && path.starts_with?("tickets.")
   end
 end
