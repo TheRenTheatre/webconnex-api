@@ -52,7 +52,7 @@ def print_inventory_report_for_show_name(name)
                       total_ir.event_time
                   }
     total_irs.each do |total_ir|
-      next if total_ir.sold == 0
+      next if total_ir.none_sold?
 
       this_date = total_ir.event_date
       if !last_date.nil? && this_date - last_date > 1

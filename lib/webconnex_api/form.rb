@@ -22,7 +22,8 @@ class WebconnexAPI::Form < OpenStruct
 
   private def inventory_records_for_sales_stats
     inventory_records.
-      select(&:single_performance_total_sales_record?)
+      select(&:single_performance_total_sales_record?).
+      reject(&:none_sold?)
   end
 
   def first_performance_date

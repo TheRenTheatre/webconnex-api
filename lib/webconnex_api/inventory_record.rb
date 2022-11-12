@@ -53,6 +53,16 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     end
   end
 
+  # When you put a show on sale, sell tickets, then later move/refund all the
+  # orders and hide the show using an Action, you'll still get an Inventory
+  # Record back showing zero tickets sold. This doesn't happen for shows that
+  # never sell a ticket. So, checking for this is one way to fix up junk data
+  # without fully implementing the Actions' logic. (And keeping track of what
+  # that logic was as of the time of each show.)
+  def none_sold?
+    sold.zero?
+  end
+
   def event_has_date_but_no_time?
     key =~ /^\d\d\d\d-\d\d-\d\d$/
   end
