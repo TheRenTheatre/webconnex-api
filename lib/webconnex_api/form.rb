@@ -19,26 +19,26 @@ class WebconnexAPI::Form < OpenStruct
     @inventory_records ||= WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
 
+
+  private def inventory_records_for_sales_stats
+    inventory_records.
+      select(&:single_performance_total_sales_record?)
+  end
+
   def first_performance_date
     # This is actually the date of the first performance with any tickets sold
-    inventory_records.
-      select(&:single_performance_total_sales_record?).
-      map(&:event_date).sort.first
+    inventory_records_for_sales_stats.map(&:event_date).sort.first
   end
 
   def total_tickets_sold
-    inventory_records.
-      select(&:single_performance_total_sales_record?).
-      sum(&:sold)
+    inventory_records_for_sales_stats.sum(&:sold)
   end
 
   def total_tickets_available
     # n.b. the 'quantity' fields change retrospectively when you adjust in the web
     # interface. So be careful making assumptions about old shows if you increase
     # capacity during a run.
-    inventory_records.
-      select(&:single_performance_total_sales_record?).
-      sum(&:quantity)
+    inventory_records_for_sales_stats.sum(&:quantity)
   end
 
   def ticket_level_names
