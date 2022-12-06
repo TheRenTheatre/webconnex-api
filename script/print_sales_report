@@ -4,12 +4,20 @@
 $LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "lib")))
 require 'webconnex_api'
 
-
 require 'rubygems'
 gem 'activesupport', '~> 7.0'
 require 'active_support/core_ext/object/blank'
 
-if ENV["VERBOSE"].present?
+require 'optparse'
+options = {}
+optparse = OptionParser.new do |parser|
+  parser.banner = "Usage: #{$0} [options] show_name"
+
+  parser.on("-v", "--[no-]verbose", "Enable API debug logging")
+end
+optparse.parse!(into: options)
+
+if options[:verbose]
   require 'logger'
 
   require 'http_logger'
@@ -23,7 +31,10 @@ end
 WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 
 
-def main
+def main(options)
+  if ARGV.blank?
+    raise "Error: specify at least one show name"
+  end
   successes = ARGV.map do |show_name|
     print_inventory_report_for_show_name(show_name)
   end
@@ -90,4 +101,4 @@ def print_inventory_report_for_show_name(name)
   end
 end
 
-main
+main(options)
