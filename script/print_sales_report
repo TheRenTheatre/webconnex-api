@@ -14,6 +14,7 @@ optparse = OptionParser.new do |parser|
   parser.banner = "Usage: #{$0} [options] show_name"
 
   parser.on("-v", "--[no-]verbose", "Enable API debug logging")
+  parser.on("--year YEAR", "Limit results to this calendar year")
 end
 optparse.parse!(into: options)
 
@@ -36,15 +37,18 @@ def main(options)
     raise "Error: specify at least one show name"
   end
   successes = ARGV.map do |show_name|
-    print_inventory_report_for_show_name(show_name)
+    print_inventory_report_for_show_name(show_name, year: options[:year])
   end
   exit 0 if successes.all?
   exit 1
 end
 
-def print_inventory_report_for_show_name(name)
+def print_inventory_report_for_show_name(name, options)
   forms = WebconnexAPI::Form.all
   shows = forms.select { |f| f.name == name && f.published? }.reverse
+  if options[:year].present?
+    shows = shows.select { |f| options[:year].to_s == f.first_performance_date.year.to_s }
+  end
 
   if shows.none?
     $stderr.puts "No published shows found called #{name.inspect}\n\n"
