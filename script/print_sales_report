@@ -45,7 +45,8 @@ end
 
 def print_inventory_report_for_show_name(name, options)
   forms = WebconnexAPI::Form.all
-  shows = forms.select { |f| f.name == name && f.published? }.reverse
+  shows = forms.select { |f| f.name.downcase == name.downcase &&
+                             f.published? }.reverse
   if options[:year].present?
     shows = shows.select { |f| options[:year].to_s == f.first_performance_date.year.to_s }
   end
