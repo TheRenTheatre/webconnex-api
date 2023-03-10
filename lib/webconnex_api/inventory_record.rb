@@ -33,6 +33,11 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   def event_time
+    if !single_performance_sales_record?
+      raise "This Inventory Record is not related to an individual " +
+            "performance, so it doesn't have a time (#{self.inspect})"
+    end
+
     # TODO: These fields don't have a TZ on them. Works great when this machine
     # is in the event TZ... =D
     # We could allow the user to configure this class with a TZ name to assume,
