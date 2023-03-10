@@ -5,8 +5,14 @@ $LOAD_PATH.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "lib
 require 'webconnex_api'
 
 require 'rubygems'
-gem 'activesupport', '~> 7.0'
-require 'active_support/core_ext/object/blank'
+begin
+  gem 'activesupport', '~> 7.0'
+  require 'active_support/core_ext/object/blank'
+rescue Gem::MissingSpecError => e
+  $stderr.puts e.message
+  $stderr.puts "This test script uses activesupport, but the gem doesn't. Install it manually."
+  exit
+end
 
 require 'optparse'
 options = {}
