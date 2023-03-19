@@ -23,7 +23,9 @@ module WebconnexAPITestHelper
   end
 
   def fixture_path(basename)
-    "test/fixtures/#{basename}"
+    "test/fixtures/#{basename}".tap { |path|
+      assert File.exist?(path), "Fixture missing: #{path}"
+    }
   end
 end
 Minitest::Test.send(:include, WebconnexAPITestHelper)
