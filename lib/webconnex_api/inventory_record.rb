@@ -2,17 +2,29 @@
 
 # This is just a thin wrapper around the API's data structure which is a little
 # heterogeneous. There's one Inventory Record for the Form's overall capacity
-# (called 'quantity'); plus one for each ticket level's quantity, but only when
-# there is more than just the one default ticket level; and then one record for
-# each date/time. The 'path', 'name', and 'key' fields tell you what you're
-# looking at. 'sold' and 'quantity' are the numbers.
+# (called 'quantity'); plus one for each ticket level's quantity for "limited supply"
+# ticket levels; and then one record for each date/time per ticket level (again,
+# not including ticket levels without "limited supply" set. I think?). The
+# 'path', 'name', and 'key' fields tell you what you're looking at. 'sold' and
+# 'quantity' are the numbers.
 #
-#   path: "tickets",       name: "tickets"                            # overall capacity for the whole Form
-#   path: "tickets.adult", name: "General Admission"                  # example ticket-level capacity (my default ticket level)
-#   path: "tickets.standingRoomOnly", name: "Standing Room Only"      # example ticket-level capacity for a second level
+#   When there are two ticket levels, both set to have a limited supply:
+#   path: "tickets",                  name: "tickets"                             # overall capacity for the whole Form
+#   path: "tickets.adult",            name: "General Admission"                   # ticket-level capacity (my default ticket level)
+#   path: "tickets.standingRoomOnly", name: "Standing Room Only"                  # ticket-level capacity for a second level
+#   path: "tickets",                  name: "tickets-2022-07-22 20:00"            # sales data for all ticket levels of a performance (this is sometimes wrong)
+#   path: "tickets.adult",            name: "General Admission-2022-07-22 20:00"  # sales data for the first, default ticket level of that performance
+#   path: "tickets.standingRoomOnly", name: "Standing Room Only-2022-07-22 20:00" # sales data for a second ticket level of that performance
 #
-#   path: "tickets",       name: "tickets-2022-07-22 20:00"           # sales data for a performance
-#   path: "tickets.adult", name: "General Admission-2022-07-22 20:00" # sales data for one ticket level of that performance
+#   When the first, default ticket level does not have a limited supply:
+#   path: "tickets",             name: "tickets"                                  # overall capacity for the whole Form
+#   path: "tickets.rushTickets", name: "Rush Tickets"                             # ticket-level capacity for a second level
+#   path: "tickets",             name: "tickets-2022-07-22 20:00"                 # sales data for the first, default ticket level of that performance?
+#   path: "tickets.rushTickets", name: "Rush Tickets-2022-07-22 20:00"            # sales data for a second ticket level of that performance
+#
+# Unfortunately, we have run into situations where the overall sales data
+# is not correct when one or more ticket levels do not have "limited supply"
+# set. It seems that these sales are not included in the totals.
 #
 # The 'key' field is the part of the 'name' field after the hyphen and
 # identifies the individual performance/showing/etc. and indicates that you're
@@ -20,9 +32,9 @@
 # same datetime string as the part after the hyphen. There is no 'key' field on
 # the other records.
 #
-# n.b. the 'quantity' fields change retrospectively when you adjust in the web
-# interface. So be careful making assumptions about old shows if you increase
-# capacity during a run.
+# n.b. the 'quantity' fields change retroactively when you adjust them in the
+# web interface. So be careful making assumptions about old shows if you
+# increase capacity during a run.
 class WebconnexAPI::InventoryRecord < OpenStruct
   # TODO OpenStruct is bad for bugs and security read its rdoc.
 

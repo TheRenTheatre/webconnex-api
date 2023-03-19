@@ -94,4 +94,36 @@ class TestWebconnexAPIForm < Minitest::Test
     form = WebconnexAPI::Form.find(481603)
     assert_equal ["General Admission", "Standing Room Only"], form.ticket_level_names
   end
+
+  def test_total_tickets_sold_for_josephine_with_limited_supply_on_for_default_ticket_level
+    resp = fixture_path("v2-public-forms-560625--with-limited-supply-on-for-default-ticket-level")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625", :response => resp)
+    resp = fixture_path("v2-public-forms-560625-inventory--with-limited-supply-on-for-default-ticket-level")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625/inventory", :response => resp)
+    form = WebconnexAPI::Form.find(560625)
+
+    # double-check we have the right fixture
+    assert_equal ["General Admission", "Rush Tickets"], form.ticket_level_names
+    ga_level = form[:fields]["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
+    assert ga_level["attributes"]["limitedInventory"]
+    assert_equal "124", ga_level["attributes"]["inventory"]
+
+    assert_equal 523, form.total_tickets_sold
+  end
+
+  def test_total_tickets_sold_for_josephine_limited_supply_off_for_default_ticket_level
+    resp = fixture_path("v2-public-forms-560625--with-limited-supply-off-for-default-ticket-level")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625", :response => resp)
+    resp = fixture_path("v2-public-forms-560625-inventory--with-limited-supply-off-for-default-ticket-level")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625/inventory", :response => resp)
+    form = WebconnexAPI::Form.find(560625)
+
+    # double-check we have the right fixture
+    assert_equal ["General Admission", "Rush Tickets"], form.ticket_level_names
+    ga_level = form[:fields]["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
+    refute ga_level["attributes"]["limitedInventory"]
+    assert_empty ga_level["attributes"]["inventory"]
+
+    assert_equal 523, form.total_tickets_sold
+  end
 end
