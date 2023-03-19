@@ -95,7 +95,7 @@ def print_inventory_report_for_show_name(name, options)
       else
         print total_ir.event_time.strftime("%l:%M%P: ")
       end
-      puts "#{total_ir.sold.to_s.rjust(total_ir.quantity.to_s.length)} / #{total_ir.quantity}"
+      puts "#{show.tickets_for_event_date(total_ir.event_time).count.to_s.rjust(total_ir.quantity.to_s.length)} / #{total_ir.quantity}"
       last_date = this_date
     end
 

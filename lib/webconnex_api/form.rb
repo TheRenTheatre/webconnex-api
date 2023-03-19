@@ -19,6 +19,9 @@ class WebconnexAPI::Form < OpenStruct
     @inventory_records ||= WebconnexAPI::InventoryRecord.all_by_form_id(id)
   end
 
+  def tickets
+    @tickets ||= WebconnexAPI::Ticket.all_by_form_id(id)
+  end
 
   private def inventory_records_for_sales_stats
     inventory_records.
@@ -26,21 +29,31 @@ class WebconnexAPI::Form < OpenStruct
       reject(&:none_sold?)
   end
 
+  private def completed_tickets
+    @completed_tickets ||= tickets.select(&:completed?)
+  end
+
+  def tickets_for_event_date(event_date)
+    completed_tickets.select { |t|
+      t.event_date == event_date
+    }
+  end
+
   def first_performance_date
     # This is actually the date of the first performance with any tickets sold
-    inventory_records_for_sales_stats.map(&:event_date).sort.first
+    completed_tickets.map(&:event_date).sort.first
   end
 
   def total_tickets_sold
-    inventory_records_for_sales_stats.sum(&:sold)
+    completed_tickets.count
   end
 
   def total_upcoming_tickets_sold
-    inventory_records_for_sales_stats.select(&:upcoming?).sum(&:sold)
+    completed_tickets.select(&:upcoming?).count
   end
 
   def total_past_tickets_sold
-    inventory_records_for_sales_stats.select(&:past?).sum(&:sold)
+    completed_tickets.select(&:past?).count
   end
 
   def total_tickets_available

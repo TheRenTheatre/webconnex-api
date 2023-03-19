@@ -96,6 +96,7 @@ class TestWebconnexAPIForm < Minitest::Test
   end
 
   def test_total_tickets_sold_for_josephine_with_limited_supply_on_for_default_ticket_level
+    setup_josephine_tickets_fixtures
     resp = fixture_path("v2-public-forms-560625--with-limited-supply-on-for-default-ticket-level")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625", :response => resp)
     resp = fixture_path("v2-public-forms-560625-inventory--with-limited-supply-on-for-default-ticket-level")
@@ -108,10 +109,11 @@ class TestWebconnexAPIForm < Minitest::Test
     assert ga_level["attributes"]["limitedInventory"]
     assert_equal "124", ga_level["attributes"]["inventory"]
 
-    assert_equal 523, form.total_tickets_sold
+    assert_equal 583, form.total_tickets_sold
   end
 
   def test_total_tickets_sold_for_josephine_limited_supply_off_for_default_ticket_level
+    setup_josephine_tickets_fixtures
     resp = fixture_path("v2-public-forms-560625--with-limited-supply-off-for-default-ticket-level")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625", :response => resp)
     resp = fixture_path("v2-public-forms-560625-inventory--with-limited-supply-off-for-default-ticket-level")
@@ -124,6 +126,6 @@ class TestWebconnexAPIForm < Minitest::Test
     refute ga_level["attributes"]["limitedInventory"]
     assert_empty ga_level["attributes"]["inventory"]
 
-    assert_equal 523, form.total_tickets_sold
+    assert_equal 583, form.total_tickets_sold
   end
 end

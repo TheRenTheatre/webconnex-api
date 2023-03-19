@@ -10,8 +10,9 @@ module WebconnexAPI
 
   ENDPOINT = "https://api.webconnex.com/v2/public"
 
-  def self.get_request(path)
+  def self.get_request(path, query: nil)
     uri = URI(WebconnexAPI::ENDPOINT + path)
+    uri.query = query
     request = Net::HTTP::Get.new(uri)
     request["apiKey"] = WEBCONNEX_API_KEY
 
@@ -24,4 +25,5 @@ end
 
 require_relative 'webconnex_api/form'
 require_relative 'webconnex_api/inventory_record'
+require_relative 'webconnex_api/ticket'
 require_relative 'webconnex_api/version'
