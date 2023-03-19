@@ -58,7 +58,7 @@ class WebconnexAPI::Form < OpenStruct
     inventory_records_for_sales_stats.select(&:past?).sum(&:quantity)
   end
 
-  def ticket_level_names
+  def ticket_levels
     # TODO temporary (lol). We obviously need some sort of loading mechanism
     # here. The List Forms API used in .all doesn't include all of the data a
     # Form can have.
@@ -66,7 +66,14 @@ class WebconnexAPI::Form < OpenStruct
       myself = self.class.find(id)
       self[:fields] = myself.fields
     end
-    self[:fields]["tickets"]["levels"].map { |l| l["attributes"]["label"] }
+
+    self[:fields]["tickets"]["levels"].reduce({}) { |h, level|
+      h.merge(level[:key] => level["attributes"]["label"])
+    }
+  end
+
+  def ticket_level_names
+    ticket_levels.values
   end
 
   def archived?
