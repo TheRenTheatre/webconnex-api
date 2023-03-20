@@ -19,6 +19,9 @@ module WebconnexAPI
     response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http|
       http.request(request)
     }
+    if !response.is_a?(Net::HTTPSuccess)
+      raise Error, "The API responded with a #{response.code}: #{response.body}"
+    end
     response.body
   end
 end
