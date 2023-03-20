@@ -11,7 +11,7 @@ begin
 rescue Gem::MissingSpecError => e
   $stderr.puts e.message
   $stderr.puts "This test script uses activesupport, but the gem doesn't. Install it manually."
-  exit
+  exit 1
 end
 
 require 'optparse'
@@ -27,7 +27,14 @@ optparse.parse!(into: options)
 if options[:verbose]
   require 'logger'
 
-  require 'http_logger'
+  begin
+    gem 'http_logger', '~> 0.7'
+    require 'http_logger'
+  rescue Gem::MissingSpecError => e
+    $stderr.puts e.message
+    $stderr.puts "This test script uses http_logger, but the gem doesn't. Install it manually."
+    exit 1
+  end
   HttpLogger.logger = Logger.new($stdout)
   HttpLogger.log_headers = true
 end
