@@ -13,8 +13,8 @@ class TestWebconnexAPIForm < Minitest::Test
 
   def test_find_does_not_raise
     resp = fixture_path("v2-public-forms-481581")
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481580", :response => resp)
-    WebconnexAPI::Form.find(481580)
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481581", :response => resp)
+    WebconnexAPI::Form.find(481581)
   end
 
   def test_published_returns_false_when_published_path_is_missing
