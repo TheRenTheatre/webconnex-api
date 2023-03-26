@@ -24,7 +24,7 @@ module WebconnexAPITestHelper
 
   def fixture_path(basename)
     "test/fixtures/#{basename}".tap { |path|
-      assert File.exist?(path), "Fixture missing: #{path}"
+      assert_path_exists path, "Fixture missing: #{path}"
     }
   end
 
