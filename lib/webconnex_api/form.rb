@@ -38,7 +38,7 @@ class WebconnexAPI::Form
   end
 
   def tickets
-    @tickets ||= WebconnexAPI::Ticket.all_by_form_id(id)
+    @tickets ||= WebconnexAPI::Ticket.all_for_form(self)
   end
 
   private def inventory_records_for_sales_stats

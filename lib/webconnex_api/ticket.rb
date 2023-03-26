@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class WebconnexAPI::Ticket
-  def self.all_by_form_id(form_id)
+  def self.all_for_form(form)
     path = "/search/tickets"
-    base_query = "product=ticketspice.com&formId=#{form_id}"
+    base_query = "product=ticketspice.com&formId=#{form.id}"
     json = WebconnexAPI.get_request(path, query: base_query)
     body = JSON.parse(json)
     data = body["data"]
@@ -17,13 +17,16 @@ class WebconnexAPI::Ticket
       # sleep 0.1 * requests
     end
     data.map { |ticket|
-      self.new(ticket)
+      self.new(ticket, form: form)
     }
   end
 
-  def initialize(hash_from_json)
+  def initialize(hash_from_json, form: nil)
     @data_from_json = hash_from_json
+    @form = form
   end
+
+  attr_reader :form
 
   def status
     @data_from_json["status"]
