@@ -129,6 +129,40 @@ class TestWebconnexAPIForm < Minitest::Test
     assert_equal 583, form.total_tickets_sold
   end
 
+  def test_event_type_recurring
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",
+                         :response => fixture_path("v2-public-forms-560625"))
+    form = WebconnexAPI::Form.find(560625)
+    assert_equal "recurring", form.event_type
+  end
+
+  def test_event_type_single
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582221",
+                         :response => fixture_path("v2-public-forms-582221"))
+    form = WebconnexAPI::Form.find(582221)
+    assert_equal "single", form.event_type
+  end
+
+  def test_event_type_on_object_from_collection
+    # This is one of the fields that isn't returned in the List Forms API,
+    # so this ensures that it's loaded when needed.
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
+                         :response => fixture_path("v2-public-forms-all"))
+    forms = WebconnexAPI::Form.all
+
+    lenoxes = forms.select { |f| f.published? && f.name == "Lenox Ave" }
+    assert_equal 1, lenoxes.count
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603",
+                         :response => fixture_path("v2-public-forms-481603"))
+    assert_equal "recurring", lenoxes.first.event_type
+
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/432935",
+                         :response => fixture_path("v2-public-forms-432935"))
+    concert = forms.find { |f| f.id == 432935 }
+    assert_equal "Stephen Pugh in Concert", concert.name
+    assert_equal "single", concert.event_type
+  end
+
   def test_loading_builds_similar_object
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
                          :response => fixture_path("v2-public-forms-all"))

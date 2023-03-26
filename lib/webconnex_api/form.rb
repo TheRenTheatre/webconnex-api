@@ -123,6 +123,14 @@ class WebconnexAPI::Form
     !published_path.nil?
   end
 
+  def event_type
+    fields["tickets"]["eventType"]
+  end
+
+  def single?
+    event_type == "single"
+  end
+
   def fields
     ensure_loaded
     @data_from_json["fields"]
