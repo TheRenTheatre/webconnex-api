@@ -21,7 +21,7 @@ class TestWebconnexAPIForm < Minitest::Test
     resp = fixture_path("v2-public-forms-481580")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481580", :response => resp)
     form = WebconnexAPI::Form.find(481580)
-    assert_nil form["publishedPath"]
+    assert_nil form.published_path
     refute form.published?
   end
 
@@ -29,7 +29,7 @@ class TestWebconnexAPIForm < Minitest::Test
     resp = fixture_path("v2-public-forms-481581")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481581", :response => resp)
     form = WebconnexAPI::Form.find(481581)
-    refute_nil form["publishedPath"]
+    refute_nil form.published_path
     assert form.published?
   end
 
@@ -105,7 +105,7 @@ class TestWebconnexAPIForm < Minitest::Test
 
     # double-check we have the right fixture
     assert_equal ["General Admission", "Rush Tickets"], form.ticket_level_names
-    ga_level = form[:fields]["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
+    ga_level = form.fields["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
     assert ga_level["attributes"]["limitedInventory"]
     assert_equal "124", ga_level["attributes"]["inventory"]
 
@@ -122,10 +122,31 @@ class TestWebconnexAPIForm < Minitest::Test
 
     # double-check we have the right fixture
     assert_equal ["General Admission", "Rush Tickets"], form.ticket_level_names
-    ga_level = form[:fields]["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
+    ga_level = form.fields["tickets"]["levels"].find { |l| l["attributes"]["label"] == "General Admission" }
     refute ga_level["attributes"]["limitedInventory"]
     assert_empty ga_level["attributes"]["inventory"]
 
     assert_equal 583, form.total_tickets_sold
+  end
+
+  def test_loading_builds_similar_object
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
+                         :response => fixture_path("v2-public-forms-all"))
+    forms = WebconnexAPI::Form.all
+    lenox_from_list_forms_api = forms.find { |f| f.id == 481603 }
+    assert_equal "Lenox Ave", lenox_from_list_forms_api.name
+
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603",
+                              :response => fixture_path("v2-public-forms-481603"))
+    lenox_from_view_form_api = WebconnexAPI::Form.find(481603)
+    assert_equal "Lenox Ave", lenox_from_view_form_api.name
+
+    refute_equal lenox_from_view_form_api.instance_variable_get(:@data_from_json),
+                 lenox_from_list_forms_api.instance_variable_get(:@data_from_json)
+
+    # cause this one to load
+    lenox_from_list_forms_api.fields
+    assert_equal lenox_from_view_form_api.instance_variable_get(:@data_from_json),
+                 lenox_from_list_forms_api.instance_variable_get(:@data_from_json)
   end
 end

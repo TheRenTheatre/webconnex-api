@@ -1,14 +1,32 @@
 # frozen_string_literal: true
 
-class WebconnexAPI::Form < OpenStruct
+class WebconnexAPI::Form
   def self.all
     json = WebconnexAPI.get_request("/forms")
-    JSON.parse(json, object_class: self).data
+    body = JSON.parse(json)
+    data = body["data"]
+    data.map { |form|
+      self.new(form)
+    }
   end
 
   def self.find(id)
     json = WebconnexAPI.get_request("/forms/#{id}")
-    JSON.parse(json, object_class: self).data
+    body = JSON.parse(json)
+    data = body["data"]
+    self.new(data)
+  end
+
+  def initialize(hash_from_json)
+    @data_from_json = hash_from_json
+  end
+
+  def id
+    @data_from_json["id"]
+  end
+
+  def name
+    @data_from_json["name"]
   end
 
   def inventory_records
@@ -72,21 +90,17 @@ class WebconnexAPI::Form < OpenStruct
   end
 
   def ticket_levels
-    # TODO temporary (lol). We obviously need some sort of loading mechanism
-    # here. The List Forms API used in .all doesn't include all of the data a
-    # Form can have.
-    if self[:fields].nil?
-      myself = self.class.find(id)
-      self[:fields] = myself.fields
-    end
-
-    self[:fields]["tickets"]["levels"].reduce({}) { |h, level|
-      h.merge(level[:key] => level["attributes"]["label"])
+    fields["tickets"]["levels"].reduce({}) { |h, level|
+      h.merge(level["key"] => level["attributes"]["label"])
     }
   end
 
   def ticket_level_names
     ticket_levels.values
+  end
+
+  def status
+    @data_from_json["status"]
   end
 
   def archived?
@@ -101,7 +115,25 @@ class WebconnexAPI::Form < OpenStruct
     status == "closed"
   end
 
+  def published_path
+    @data_from_json["publishedPath"]
+  end
+
   def published?
-    !publishedPath.nil?
+    !published_path.nil?
+  end
+
+  def fields
+    ensure_loaded
+    @data_from_json["fields"]
+  end
+
+  private def ensure_loaded
+    # The List Forms API used in .all doesn't include all of the data a Form
+    # can have. The big "fields" object is a reasonable one to check.
+    if @data_from_json["fields"].nil?
+      myself = self.class.find(id)
+      @data_from_json = myself.instance_variable_get(:@data_from_json)
+    end
   end
 end
