@@ -78,15 +78,33 @@ class WebconnexAPI::Form
     # n.b. the 'quantity' fields change retrospectively when you adjust in the web
     # interface. So be careful making assumptions about old shows if you increase
     # capacity during a run.
-    inventory_records_for_sales_stats.sum(&:quantity)
+    if single?
+      inventory_records.find(&:overall_capacity_record?).quantity
+    else
+      inventory_records_for_sales_stats.sum(&:quantity)
+    end
   end
 
   def total_upcoming_tickets_available
-    inventory_records_for_sales_stats.select(&:upcoming?).sum(&:quantity)
+    now = Time.now
+    if single? && event_start <= now
+      0
+    elsif single? && event_start > now
+      inventory_records.find(&:overall_capacity_record?).quantity
+    else
+      inventory_records_for_sales_stats.select(&:upcoming?).sum(&:quantity)
+    end
   end
 
   def total_past_tickets_available
-    inventory_records_for_sales_stats.select(&:past?).sum(&:quantity)
+    now = Time.now
+    if single? && event_start > now
+      0
+    elsif single? && event_start <= now
+      inventory_records.find(&:overall_capacity_record?).quantity
+    else
+      inventory_records_for_sales_stats.select(&:past?).sum(&:quantity)
+    end
   end
 
   def ticket_levels
@@ -134,6 +152,18 @@ class WebconnexAPI::Form
   def fields
     ensure_loaded
     @data_from_json["fields"]
+  end
+
+  def event_start
+    if single?
+      ensure_loaded
+      tz = TZInfo::Timezone.get(@data_from_json["timeZone"])
+      tz.to_local(Time.xmlschema(@data_from_json["eventStart"]))
+    elsif @data_from_json.has_key?("eventStart")
+      raise "This form has an eventStart but its event_type is #{event_type}, which isn't handled"
+    else
+      raise "This form does not have an eventStart"
+    end
   end
 
   private def ensure_loaded

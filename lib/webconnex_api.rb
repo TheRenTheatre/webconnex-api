@@ -4,6 +4,7 @@ require 'net/http'
 require 'json'
 require 'date'
 require 'time'
+require 'tzinfo'
 
 module WebconnexAPI
   class Error < StandardError; end

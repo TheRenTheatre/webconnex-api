@@ -37,7 +37,13 @@ class WebconnexAPI::Ticket
   end
 
   def event_date
-    Time.parse(@data_from_json["eventDate"])
+    if @data_from_json.has_key?("eventDate")
+      Time.parse(@data_from_json["eventDate"])
+    elsif form.single?
+      form.event_start
+    else
+      raise "This ticket doesn't have an eventDate and we don't know where else to find that"
+    end
   end
 
   def upcoming?

@@ -100,6 +100,10 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     !key.nil?
   end
 
+  def overall_capacity_record?
+    !single_performance_sales_record? && path == "tickets"
+  end
+
   def single_performance_total_sales_record?
     single_performance_sales_record? && path == "tickets"
   end
