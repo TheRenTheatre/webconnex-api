@@ -36,7 +36,7 @@ module WebconnexAPITestHelper
   # $ for startingAfter in $(seq 0 50 550); do
   # >   curl --http1.1 -X "GET" -is \
   # >   "https://api.webconnex.com/v2/public/search/tickets?product=ticketspice.com&formId=$formID&startingAfter=$startingAfter" \
-  # >   -H "apiKey: $WEBCONNEX_API_KEY" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" >
+  # >   -H "apiKey: $WEBCONNEX_API_KEY" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > \
   # >   test/fixtures/v2-public-search-tickets-formid=$FormID-startingafter=$startingAfter
   # >   sleep 5
   # > done
