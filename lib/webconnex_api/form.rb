@@ -21,6 +21,10 @@ class WebconnexAPI::Form
     @data_from_json = hash_from_json
   end
 
+  def inspect
+    %Q(#<WebconnexAPI::Form id=#{id.inspect}, name=#{name.inspect}, event_type=#{event_type.inspect}>)
+  end
+
   def id
     @data_from_json["id"]
   end
