@@ -37,7 +37,7 @@ module WebconnexAPITestHelper
   # >   curl --http1.1 -X "GET" -is \
   # >   "https://api.webconnex.com/v2/public/search/tickets?product=ticketspice.com&formId=$formID&startingAfter=$startingAfter" \
   # >   -H "apiKey: $WEBCONNEX_API_KEY" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > \
-  # >   test/fixtures/v2-public-search-tickets-formid=$FormID-startingafter=$startingAfter
+  # >   test/fixtures/v2-public-search-tickets-formid=$formID-startingafter=$startingAfter
   # >   sleep 5
   # > done
   def setup_josephine_tickets_fixtures

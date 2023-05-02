@@ -8,7 +8,7 @@
 # 'path', 'name', and 'key' fields tell you what you're looking at. 'sold' and
 # 'quantity' are the numbers.
 #
-#   When there are two ticket levels, both set to have a limited supply:
+#   When there are two ticket levels to a "recurring" type Form, both set to have a limited supply:
 #   path: "tickets",                  name: "tickets"                             # overall capacity for the whole Form
 #   path: "tickets.adult",            name: "General Admission"                   # ticket-level capacity (my default ticket level)
 #   path: "tickets.standingRoomOnly", name: "Standing Room Only"                  # ticket-level capacity for a second level
@@ -28,9 +28,11 @@
 #
 # The 'key' field is the part of the 'name' field after the hyphen and
 # identifies the individual performance/showing/etc. and indicates that you're
-# looking at its sales data. For my data from Ticketspice, the key is always the
-# same datetime string as the part after the hyphen. There is no 'key' field on
-# the other records.
+# looking at its sales data. For my data from Ticketspice, for "recurring" events,
+# the key is always the same datetime string as the part after the hyphen. For
+# "multiple" events, it is an abbreviated event list key like "event1" or
+# "may1stGrandFinale". "Single" type forms do not have these per-show records,
+# just the overall capacity records, which have no 'key' field for all event types.
 #
 # n.b. the 'quantity' fields change retroactively when you adjust them in the
 # web interface. So be careful making assumptions about old shows if you

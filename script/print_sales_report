@@ -35,12 +35,15 @@ if options[:verbose]
     $stderr.puts "This test script uses http_logger, but the gem doesn't. Install it manually."
     exit 1
   end
-  HttpLogger.logger = Logger.new($stdout)
+  HttpLogger.logger = Logger.new($stderr)
   HttpLogger.log_headers = true
+  HttpLogger.collapse_body_limit = 0
 end
 
 if ENV["WEBCONNEX_API_KEY"].blank?
   raise "Error: environment missing WEBCONNEX_API_KEY"
+elsif ENV["WEBCONNEX_API_KEY"] !~ /^[0-9a-f]{32}$/
+  raise "Error: WEBCONNEX_API_KEY is set but does not match the expected format"
 end
 WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 

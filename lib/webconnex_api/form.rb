@@ -78,10 +78,10 @@ class WebconnexAPI::Form
     completed_tickets.select(&:past?).count
   end
 
+  # n.b. the 'quantity' fields change retrospectively when you adjust in the web
+  # interface. So be careful making assumptions about old shows if you increase
+  # capacity during a run.
   def total_tickets_available
-    # n.b. the 'quantity' fields change retrospectively when you adjust in the web
-    # interface. So be careful making assumptions about old shows if you increase
-    # capacity during a run.
     if single?
       inventory_records.find(&:overall_capacity_record?).quantity
     else
@@ -151,6 +151,14 @@ class WebconnexAPI::Form
 
   def single?
     event_type == "single"
+  end
+
+  def multiple?
+    event_type == "multiple"
+  end
+
+  def recurring?
+    event_type == "recurring"
   end
 
   def fields

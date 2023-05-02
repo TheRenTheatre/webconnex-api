@@ -3,13 +3,15 @@
 require 'test_helper'
 
 class TestWebconnexAPIForm < Minitest::Test
-  # To grab a fixture in plaintext (set an ID)
-  # curl --http1.1 -X "GET" -is "https://api.webconnex.com/v2/public/forms/$ID" -H "apiKey: $WEBCONNEX_API_KEY" -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > test/fixtures/v2-public-forms-$ID
+  # To grab a fixture in plaintext:
+  # FormID=481580; curl --http1.1 -X "GET" -is "https://api.webconnex.com/v2/public/forms/$FormID" -H "apiKey: $WEBCONNEX_API_KEY" \
+  # -H "Accept: */*" -H "User-Agent: Ruby" -H "Host: api.webconnex.com" > test/fixtures/v2-public-forms-$FormID
   #
   # Useful fixtures:
   # 481580 - unpublished, archived form with same name as a published one (Bullock and the Bandits)
   # 481581 - the published one
   # 481603 - one where we have inventory records fixtures as well (Lenox Ave)
+  # 582034 - MM Cabaret Superstar 2023 - 'multiple' event-type with no structured event date data
 
   def test_find_does_not_raise
     resp = fixture_path("v2-public-forms-481581")
