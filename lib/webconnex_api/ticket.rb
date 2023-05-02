@@ -37,13 +37,22 @@ class WebconnexAPI::Ticket
   end
 
   def event_date
-    if @data_from_json.has_key?("eventDate")
+    if @data_from_json.has_key?("eventDate") && form.event_start?
+      # TODO: when a recurring form has no time slots set up, this will be midnight UTC.
+      # try to override it with the event's start time.
+      # ap @data_from_json["eventDate"]
       Time.parse(@data_from_json["eventDate"])
     elsif form.single?
       form.event_start
+    elsif form.multiple?
+      form.guessed_event_date_for_event_list_name(event_label)
     else
       raise "This ticket doesn't have an eventDate and we don't know where else to find that"
     end
+  end
+
+  def event_label
+    @data_from_json["eventLabel"]
   end
 
   def upcoming?

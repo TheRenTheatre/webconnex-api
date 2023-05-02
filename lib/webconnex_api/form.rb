@@ -11,10 +11,19 @@ class WebconnexAPI::Form
   end
 
   def self.find(id)
-    json = WebconnexAPI.get_request("/forms/#{id}")
-    body = JSON.parse(json)
-    data = body["data"]
-    self.new(data)
+    @@cache_by_id ||= {}
+    if @@cache_by_id.has_key?(id)
+      @@cache_by_id[id]
+    else
+      json = WebconnexAPI.get_request("/forms/#{id}")
+      body = JSON.parse(json)
+      data = body["data"]
+      @@cache_by_id[id] = self.new(data)
+    end
+  end
+
+  def self.clear_cache
+    @@cache_by_id = {}
   end
 
   def initialize(hash_from_json)
@@ -166,24 +175,60 @@ class WebconnexAPI::Form
     @data_from_json["fields"]
   end
 
+  def time_zone
+    ensure_loaded
+    return nil if !time_zone?
+    TZInfo::Timezone.get(@data_from_json["timeZone"])
+  end
+
+  def time_zone?
+    ensure_loaded
+    @data_from_json.has_key?("timeZone")
+  end
+
   def event_start
-    if single?
-      ensure_loaded
-      tz = TZInfo::Timezone.get(@data_from_json["timeZone"])
-      tz.to_local(Time.xmlschema(@data_from_json["eventStart"]))
-    elsif @data_from_json.has_key?("eventStart")
-      raise "This form has an eventStart but its event_type is #{event_type}, which isn't handled"
+    ensure_loaded
+    if @data_from_json.has_key?("eventStart")
+      time_zone.to_local(Time.xmlschema(@data_from_json["eventStart"]))
     else
-      raise "This form does not have an eventStart"
+      nil
     end
+  end
+
+  def event_start?
+    ensure_loaded
+    @data_from_json.has_key?("eventStart")
+  end
+
+  def event_list
+    fields["tickets"]["events"]["options"].reduce({}) { |list, option|
+      list.update(option["key"] => option["attributes"]["label"])
+    }
+  end
+
+  def event_list_names
+    event_list.values
+  end
+
+  def guessed_event_date_for_event_list_name(event_list_name)
+    guess = event_start
+    Date::MONTHNAMES.each_with_index do |month_name, month|
+      next if month == 0
+      (1..31).each do |day|
+        if event_list_name.include?("#{month_name} #{ActiveSupport::Inflector.ordinalize(day)}")
+          guess = guess.change(month: month, day: day)
+        end
+      end
+    end
+    guess
   end
 
   private def ensure_loaded
     # The List Forms API used in .all doesn't include all of the data a Form
     # can have. The big "fields" object is a reasonable one to check.
-    if @data_from_json["fields"].nil?
-      myself = self.class.find(id)
-      @data_from_json = myself.instance_variable_get(:@data_from_json)
-    end
+    return true if @data_from_json["fields"].present?
+
+    myself = self.class.find(id)
+    @data_from_json = myself.instance_variable_get(:@data_from_json)
   end
 end

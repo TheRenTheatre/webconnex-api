@@ -19,12 +19,13 @@ options = {}
 optparse = OptionParser.new do |parser|
   parser.banner = "Usage: #{$0} [options] show_name"
 
-  parser.on("-v", "--[no-]verbose", "Enable API debug logging")
+  parser.on("-l", "--[no-]log", "Print full API requests and responses")
+  parser.on("-d", "--[no-]details", "Print internal details (Form's ID, eventType, startTime)")
   parser.on("--year YEAR", "Limit results to this calendar year")
 end
 optparse.parse!(into: options)
 
-if options[:verbose]
+if options[:log]
   require 'logger'
 
   begin
@@ -55,7 +56,7 @@ def main(options)
     raise "Error: specify at least one show name"
   end
   successes = ARGV.map do |show_name|
-    print_inventory_report_for_show_name(show_name, year: options[:year])
+    print_inventory_report_for_show_name(show_name, year: options[:year], print_internal_details: options[:details])
   end
   exit 0 if successes.all?
   exit 1
@@ -75,9 +76,24 @@ def print_inventory_report_for_show_name(name, options)
   end
 
   shows.each do |show|
-    puts "#{show.name} (#{show.first_performance_date.year}):\n\n"
+    puts "#{show.name} (#{show.first_performance_date.year})"
+    if options[:print_internal_details]
+      puts "          Form ID: \033[2;38m#{show.id}\e[0m"
+      puts "       Event type: \033[2;38m#{show.event_type}\e[0m"
+      puts "      Event start: \033[2;38m#{show.event_start}\e[0m"
+      puts "           Status: \033[2;38m#{show.status}\e[0m"
+      puts "    Ticket levels: \033[2;38m#{show.ticket_level_names.join(', ')}\e[0m\n\n"
+    end
 
     last_date = nil
+    if options[:print_internal_details]
+      puts "    Inventory records:"
+      show.inventory_records.sort_by { |ir| [ir.name.to_s, ir.key.to_s] }.each do |ir|
+        print "    \033[2;38m"; ap ir.to_h.except(:dateCreated, :form_id, :dateUpdated), multiline: false, ruby19_syntax: true; print "\e[0m"
+      end
+    end
+    puts
+
     total_irs = show.inventory_records.
                   select(&:single_performance_total_sales_record?).
                   sort_by { |total_ir|
@@ -86,7 +102,7 @@ def print_inventory_report_for_show_name(name, options)
                       total_ir.event_time
                   }
     total_irs.each do |total_ir|
-      next if total_ir.none_sold?
+      next if total_ir.none_sold? && total_ir.past?
 
       this_date = total_ir.event_date
       if !last_date.nil? && this_date - last_date > 1
@@ -100,11 +116,7 @@ def print_inventory_report_for_show_name(name, options)
         print "                   "
       end
 
-      if total_ir.event_has_date_but_no_time?
-        print "no time: "
-      else
-        print total_ir.event_time.strftime("%l:%M%P: ")
-      end
+      print total_ir.event_time.strftime("%l:%M%P: ")
       puts "#{show.tickets_for_event_date(total_ir.event_time).count.to_s.rjust(total_ir.quantity.to_s.length)} / #{total_ir.quantity}"
       last_date = this_date
     end

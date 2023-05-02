@@ -185,4 +185,41 @@ class TestWebconnexAPIForm < Minitest::Test
     assert_equal lenox_from_view_form_api.instance_variable_get(:@data_from_json),
                  lenox_from_list_forms_api.instance_variable_get(:@data_from_json)
   end
+
+  def test_event_list_for_multiple_event_type
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582034",
+                         :response => fixture_path("v2-public-forms-582034"))
+    form = WebconnexAPI::Form.find(582034)
+
+    expected = {"event1"             => "April 3rd - Dream Roles",
+                "event2"             => "April 10th - Funny Girl (Comedic)",
+                "event3"             => 'April 17th - "Go To" Songs',
+                "april24th11Oclock"  => "April 24th - 11 O’Clock Numbers",
+                "may1stGrandeFinale" => "May 1st - Grande Finale"}
+    assert_equal expected, form.event_list
+
+    expected = [
+      "April 3rd - Dream Roles", "April 10th - Funny Girl (Comedic)",
+      'April 17th - "Go To" Songs', "April 24th - 11 O’Clock Numbers",
+      "May 1st - Grande Finale"
+    ]
+    assert_equal expected, form.event_list_names
+  end
+
+  def test_guessed_event_date_for_event_list_name
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582034",
+                         :response => fixture_path("v2-public-forms-582034"))
+    form = WebconnexAPI::Form.find(582034)
+
+    expected_guesses = {
+      "April 3rd - Dream Roles"           => Time.new(2023, 4, 3,  20, 0, 0, "-04:00"),
+      "April 10th - Funny Girl (Comedic)" => Time.new(2023, 4, 10, 20, 0, 0, "-04:00"),
+      'April 17th - "Go To" Songs'        => Time.new(2023, 4, 17, 20, 0, 0, "-04:00"),
+      "April 24th - 11 O’Clock Numbers"   => Time.new(2023, 4, 24, 20, 0, 0, "-04:00"),
+      "May 1st - Grande Finale"           => Time.new(2023, 5, 1,  20, 0, 0, "-04:00")
+    }
+    expected_guesses.each do |event_label, expected|
+      assert_equal expected, form.guessed_event_date_for_event_list_name(event_label)
+    end
+  end
 end

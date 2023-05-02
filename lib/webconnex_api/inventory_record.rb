@@ -43,7 +43,11 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   def self.all_by_form_id(form_id)
     # TODO: this fails for unpublished forms (see fixture 481580)
     json = WebconnexAPI.get_request("/forms/#{form_id}/inventory")
-    JSON.parse(json, object_class: self).data
+    irs = JSON.parse(json, object_class: self).data
+    irs.each do |ir|
+      ir.form_id = form_id
+    end
+    irs
   end
 
   def event_time
@@ -56,12 +60,26 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # is in the event TZ... =D
     # We could allow the user to configure this class with a TZ name to assume,
     # like "America/New_York"
-    if event_has_date_but_no_time?
-      raise "This Inventory Record does not have a time " +
-            "(name: #{name.inspect}, key: #{key.inspect})"
-    end
 
-    @event_time ||= Time.strptime(key, "%Y-%m-%d %H:%M")
+    form = WebconnexAPI::Form.find(form_id)
+
+    # When we set up a recurring form, set the form's "event start" to the first
+    # performance's start time, set a recurring schedule, but don't add time
+    # slots, the inventory record keys will only have a date, no time. For the
+    # first recurring performance, we can infer the time from the "event start".
+    # After that, probably safer not to.
+    if form.recurring? && event_has_date_but_no_time? && form.time_zone? && form.event_start?
+      from_key = Time.strptime(key, "%Y-%m-%d")
+
+      @event_time = form.event_start
+
+      @event_time.change(year: from_key.year, month: from_key.month, day: from_key.day)
+    elsif form.multiple?
+      event_label = form.event_list[key]
+      @event_time ||= form.guessed_event_date_for_event_list_name(event_label)
+    else
+      @event_time ||= Time.strptime(key, "%Y-%m-%d %H:%M")
+    end
   end
 
   def event_date

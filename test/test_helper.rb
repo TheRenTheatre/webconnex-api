@@ -3,7 +3,7 @@
 require 'bundler'
 Bundler.require(:default, :test)
 
-require 'webconnex_api'
+require_relative '../lib/webconnex_api'
 
 require 'minitest/autorun'
 require 'minitest/pride'
@@ -14,6 +14,7 @@ module WebconnexAPITestHelper
     Object.const_set(:WEBCONNEX_API_KEY, "ffff084aa7abee86fc0203e606faffff") # made up
     FakeWeb.clean_registry
     FakeWeb.allow_net_connect = false
+    WebconnexAPI::Form.clear_cache
     super
   end
 

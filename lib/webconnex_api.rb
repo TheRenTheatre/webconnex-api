@@ -5,6 +5,7 @@ require 'json'
 require 'date'
 require 'time'
 require 'tzinfo'
+require "active_support/core_ext/time/calculations"
 
 module WebconnexAPI
   class Error < StandardError; end

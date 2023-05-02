@@ -3,6 +3,7 @@
 source "https://rubygems.org"
 
 gem "tzinfo", "~> 2.0"
+gem "activesupport", "~> 7.0"
 
 group :test do
   gem "rake",     "~> 13.0"
