@@ -158,10 +158,13 @@ class WebconnexAPI::Form
     fields["tickets"]["eventType"]
   end
 
+  # This is sometimes called "Standard" in the web UI
   def single?
     event_type == "single"
   end
 
+  # I believe this is the "multiple events" one. There's also a
+  # "multiple days" event type I haven't encountered yet.
   def multiple?
     event_type == "multiple"
   end
