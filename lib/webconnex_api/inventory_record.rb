@@ -50,6 +50,11 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     irs
   end
 
+  def form
+    raise "form_id isn't set" if form_id.nil?
+    @form ||= WebconnexAPI::Form.find(form_id)
+  end
+
   def event_time
     if !single_performance_sales_record?
       raise "This Inventory Record is not related to an individual " +
@@ -60,8 +65,6 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # is in the event TZ... =D
     # We could allow the user to configure this class with a TZ name to assume,
     # like "America/New_York"
-
-    form = WebconnexAPI::Form.find(form_id)
 
     # When we set up a recurring form, set the form's "event start" to the first
     # performance's start time, set a recurring schedule, but don't add time
