@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby -w
+# frozen_string_literal: true
+
+# I noticed the Webconnex API looks a bit like JSON:API (https://jsonapi.org/).
+# So I figured I'd try consuming it with one of the JSON:API gems. It turns out
+# there are a lot of significant differences, and I think it makes our client
+# harder to understand, with most of our code trying to shoe-horn the formats
+# into proper JSON:API resources. Even with that in place, there aren't a lot of
+# easy wins I was expecting with caching, JSON document storage, etc.
+#
+# This uses https://github.com/JsonApiClient/json_api_client/.
+# Other interesting libraries:
+#   - https://github.com/trailblazer/roar and
+#     https://github.com/trailblazer/roar-jsonapi
+#   - https://github.com/jsonapi-rb
+
+
+require 'rubygems'
+gem 'awesome_print', '~> 1.9'
+require 'awesome_print'
+gem 'json_api_client', '~> 1.0'
+require 'json_api_client'
+
+if ENV["WEBCONNEX_API_KEY"].blank?
+  raise "Error: environment missing WEBCONNEX_API_KEY"
+elsif ENV["WEBCONNEX_API_KEY"] !~ /^[0-9a-f]{32}$/
+  raise "Error: WEBCONNEX_API_KEY is set but does not match the expected format"
+end
+WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
+
+
+module WebconnexAPI
+  class Base < JsonApiClient::Resource
+    self.site = "https://api.webconnex.com/v2/public"
+    self.json_key_format = :camelized_key
+  end
+end
+
+module WebconnexAPI
+  class Form < Base
+    property :event_start, type: :time
+  end
+
+  module FaradayMiddlewareToTranslateResponsesToJsonApi
+    class Form < Faraday::Middleware
+      def call(environment)
+        @app.call(environment).on_complete do |env|
+          return unless env.response.body["data"]["fields"].delete("type") == "form"
+
+          env.response.body["data"]["type"] = "form"
+
+          data_keys_to_move_to_attributes =
+            %w(name product currency accRef publishedPath status eventStart fields
+            template_id theme_id timeZone metadata datePublished dateCreated dateUpdated)
+          data_keys_to_delete = %w(responseCode totalResults)
+
+          env.response.body["data"]["attributes"] ||= {}
+          data_keys_to_move_to_attributes.each do |key|
+            env.response.body["data"]["attributes"][key] =
+              env.response.body["data"].delete(key)
+          end
+          data_keys_to_delete.each do |key|
+            env.response.body.delete(key)
+          end
+        end
+      end
+    end
+  end
+end
+
+WebconnexAPI::Form.connection do |c|
+  c.use Faraday::Response::Logger
+  c.use WebconnexAPI::FaradayMiddlewareToTranslateResponsesToJsonApi::Form
+end
+
+WebconnexAPI::Form.with_headers(apiKey: WEBCONNEX_API_KEY) do
+  liz = WebconnexAPI::Form.find(582221).first
+  ap id:             liz.id,
+     name:           liz.name,
+     status:         liz.status,
+     published_path: liz.published_path,
+     event_start:    liz.event_start
+end
