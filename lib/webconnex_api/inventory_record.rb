@@ -61,6 +61,8 @@ class WebconnexAPI::InventoryRecord < OpenStruct
             "performance, so it doesn't have a time (#{self.inspect})"
     end
 
+    return @event_time if !@event_time.nil?
+
     # TODO: These fields don't have a TZ on them. Works great when this machine
     # is in the event TZ... =D
     # We could allow the user to configure this class with a TZ name to assume,
@@ -73,15 +75,14 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # After that, probably safer not to.
     if form.recurring? && event_has_date_but_no_time? && form.time_zone? && form.event_start?
       from_key = Time.strptime(key, "%Y-%m-%d")
-
-      @event_time = form.event_start
-
-      @event_time.change(year: from_key.year, month: from_key.month, day: from_key.day)
+      @event_time = form.event_start.change(year:  from_key.year,
+                                            month: from_key.month,
+                                            day:   from_key.day)
     elsif form.multiple?
       event_label = form.event_list[key]
-      @event_time ||= form.guessed_event_date_for_event_list_name(event_label)
+      @event_time = form.guessed_event_date_for_event_list_name(event_label)
     else
-      @event_time ||= Time.strptime(key, "%Y-%m-%d %H:%M")
+      @event_time = Time.strptime(key, "%Y-%m-%d %H:%M")
     end
   end
 
