@@ -155,6 +155,24 @@ def print_inventory_report_for_show_name(name, options)
         label_to_data[t.level_label][:count] += 1
         label_to_data[t.level_label][:total_amount_cents] += t.amount_cents
       end
+      if options[:print_ticket_levels] && show.name == "54"
+        labels_that_mean_54 = ["$54 for 54: Two Experiences, One Amazing Night", "DOUBLE DISCOUNT Tickets", "54 General Admission",
+                               "54 DISCOUNT Tickets", "54 VIP Experience", "54 General Admission AND After Hours", "54 Discount Tickets"]
+        labels_that_mean_ah = ["$54 for 54: Two Experiences, One Amazing Night", "DOUBLE DISCOUNT Tickets", "54 After Hours Only",
+                               "54 After Hours Only  DISCOUNT Tickets", "54 VIP Experience", "54 General Admission AND After Hours",
+                               "54 After Hours DISCOUNT Tickets"]
+        labels_that_are_passes = ["The Glitter Pass", "Repeat Offenders: The Glitter Pass"]
+
+        show_count = ah_count = pass_count = 0
+        label_to_data.each do |level_label, level_data|
+          show_count += level_data[:count] if labels_that_mean_54.include?(level_label)
+          ah_count += level_data[:count] if labels_that_mean_ah.include?(level_label)
+          pass_count += level_data[:count] if labels_that_are_passes.include?(level_label)
+          raise "Unknown ticket level: #{level_label.inspect}" unless (labels_that_mean_54 + labels_that_mean_ah + labels_that_are_passes).include?(level_label)
+        end
+        print "\n                        54: #{show_count.to_s.rjust(3)}\n" +
+              "            54 After-Hours: #{ah_count.to_s.rjust(3)}"
+      end
       if options[:print_ticket_levels]
         puts
         label_to_data.sort_by { |l, d| -d[:count] }.each do |level_label, level_data|
