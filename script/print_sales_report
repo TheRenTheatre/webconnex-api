@@ -14,6 +14,9 @@ rescue Gem::MissingSpecError => e
   exit 1
 end
 
+gem 'awesome_print', '~> 1.9'
+require 'awesome_print'
+
 require 'optparse'
 options = {}
 optparse = OptionParser.new do |parser|
@@ -48,8 +51,6 @@ elsif ENV["WEBCONNEX_API_KEY"] !~ /^[0-9a-f]{32}$/
 end
 WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 
-gem 'awesome_print', '~> 1.9'
-require 'awesome_print'
 
 def main(options)
   if ARGV.blank?
