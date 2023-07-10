@@ -74,15 +74,14 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # first recurring performance, we can infer the time from the "event start".
     # After that, probably safer not to.
     if form.recurring? && event_has_date_but_no_time? && form.time_zone? && form.event_start?
-      from_key = Time.strptime(key, key_format)
-      @event_time = form.event_start.change(year:  from_key.year,
-                                            month: from_key.month,
-                                            day:   from_key.day)
+      @event_time = form.event_start.change(year:  time_from_key.year,
+                                            month: time_from_key.month,
+                                            day:   time_from_key.day)
     elsif form.multiple?
       event_label = form.event_list[key]
       @event_time = form.guessed_event_date_for_event_list_name(event_label)
     else
-      @event_time = Time.strptime(key, key_format)
+      @event_time = time_from_key
     end
   end
 
@@ -130,6 +129,10 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     else
      "%Y-%m-%d %H:%M"
     end
+  end
+
+  private def time_from_key
+    Time.strptime(key, key_format)
   end
 
   def overall_capacity_record?
