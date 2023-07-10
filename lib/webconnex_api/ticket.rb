@@ -36,12 +36,15 @@ class WebconnexAPI::Ticket
     status == "completed"
   end
 
+  # This is an ISO 8601-style datetime that seems to always come back in UTC
+  # (e.g. "2023-06-28T23:30:00Z"). We'll wrap it in a Time-like object in the
+  # time zone of the event.
   def event_date
-    if @data_from_json.has_key?("eventDate") && form.event_start?
-      # TODO: when a recurring form has no time slots set up, this will be midnight UTC.
-      # try to override it with the event's start time.
-      # ap @data_from_json["eventDate"]
-      Time.parse(@data_from_json["eventDate"])
+    # TODO: when a recurring form has no time slots set up, this will be midnight UTC.
+    # try to override it with the event's start time?
+
+    if @data_from_json.has_key?("eventDate")
+      form.time_zone.to_local(Time.xmlschema(@data_from_json["eventDate"]))
     elsif form.single?
       form.event_start
     elsif form.multiple?

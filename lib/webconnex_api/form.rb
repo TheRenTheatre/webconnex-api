@@ -219,7 +219,12 @@ class WebconnexAPI::Form
       next if month == 0
       (1..31).each do |day|
         if event_list_name.include?("#{month_name} #{ActiveSupport::Inflector.ordinalize(day)}")
-          guess = guess.change(month: month, day: day)
+          # Something about our Time object receiving #change makes it return a new
+          # object with the machine's TZ slapped on it intead of the receiver's TZ,
+          # therefore changing other fields inadvertently. This dance fixes it.
+          # TODO: figure out why this is happening, DRY up the pattern
+          in_machine_zone = guess.change(month: month, day: day)
+          guess = time_zone.to_local(time_zone.local_to_utc(in_machine_zone))
         end
       end
     end

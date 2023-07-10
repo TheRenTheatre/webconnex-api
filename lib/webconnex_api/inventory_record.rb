@@ -58,11 +58,6 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   def event_time
     return @event_time if !@event_time.nil?
 
-    # TODO: These fields don't have a TZ on them. Works great when this machine
-    # is in the event TZ... =D
-    # We could allow the user to configure this class with a TZ name to assume,
-    # like "America/New_York"
-
     if !single_performance_sales_record?
       # It's probably a mistake to call this method on a record not related to
       # an individual performance.
@@ -81,14 +76,19 @@ class WebconnexAPI::InventoryRecord < OpenStruct
       # slots, the inventory record keys will only have a date, no time. For the
       # first recurring performance, we can infer the time from the "event start".
       # After that, probably safer not to.
-      @event_time = form.event_start.change(year:  time_from_key.year,
-                                            month: time_from_key.month,
-                                            day:   time_from_key.day)
+      changed = form.event_start.change(year:  time_from_key_in_event_tz.year,
+                                        month: time_from_key_in_event_tz.month,
+                                        day:   time_from_key_in_event_tz.day)
+      # Something about our Time object receiving #change makes it return a new
+      # object with the machine's TZ slapped on it intead of the receiver's TZ,
+      # therefore changing other fields inadvertently. This dance fixes it.
+      # TODO: figure out why this is happening, DRY up the pattern
+      @event_time = form.time_zone.to_local(form.time_zone.local_to_utc(changed))
     elsif form.multiple?
       event_label = form.event_list[key]
       @event_time = form.guessed_event_date_for_event_list_name(event_label)
     else
-      @event_time = time_from_key
+      @event_time = time_from_key_in_event_tz
     end
   end
 
@@ -134,9 +134,11 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     end
   end
 
-  private def time_from_key
+  private def time_from_key_in_event_tz
     raise "keys are blank for single events" if form.single?
-    Time.strptime(key, key_format)
+    in_machine_zone = Time.strptime(key, key_format)
+    in_utc = form.time_zone.local_to_utc(in_machine_zone) # this disregards the object's TZ
+    form.time_zone.to_local(in_utc)
   end
 
   def single_performance_sales_record_for_first_performance?
@@ -144,9 +146,9 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     return false if !single_performance_sales_record?
 
     if event_has_date_but_no_time?
-      form.first_performance_date.to_date == time_from_key.to_date
+      form.first_performance_date.to_date == time_from_key_in_event_tz.to_date
     else
-      form.first_performance_date == time_from_key
+      form.first_performance_date == time_from_key_in_event_tz
     end
   end
 

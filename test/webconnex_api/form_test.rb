@@ -222,4 +222,15 @@ class TestWebconnexAPIForm < Minitest::Test
       assert_equal expected, form.guessed_event_date_for_event_list_name(event_label)
     end
   end
+
+  def test_event_start_converts_to_event_time_zone_correctly
+    # The responses I get from the API are "xmlschema" format, and explicitly UTC.
+    # We'd like to return these in the local zone of the event.
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582034",
+                         :response => fixture_path("v2-public-forms-582034"))
+    form = WebconnexAPI::Form.find(582034)
+
+    assert_equal "2023-04-04T00:00:00Z", form.instance_variable_get(:@data_from_json)["eventStart"]
+    assert_equal "2023-04-03 20:00:00 -0400", form.event_start.to_s
+  end
 end
