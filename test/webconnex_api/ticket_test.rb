@@ -46,6 +46,8 @@ class TestWebconnexAPITicket < Minitest::Test
     end
     assert_equal ["General Admission", "Rush Tickets"],
       tickets.map(&:level_label).uniq.sort
+    assert_equal ["adult", "rushTickets"],
+      tickets.map(&:level_key).uniq.sort
   end
 
   def test_event_label
@@ -66,5 +68,33 @@ class TestWebconnexAPITicket < Minitest::Test
     assert_equal 1, form.tickets.count
     assert_equal "April 3rd - Dream Roles", form.tickets.first.event_label
     assert_equal Time.new(2023, 4, 3, 20, 0, 0, "-04:00"), form.tickets.first.event_date
+  end
+
+  def test_amount_cents
+    setup_josephine_tickets_fixtures
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",
+                         :response => fixture_path("v2-public-forms-560625"))
+    form = WebconnexAPI::Form.find(560625)
+    tickets = WebconnexAPI::Ticket.all_for_form(form)
+
+    prices_charged_by_level = tickets.reduce(Hash.new { |h, k| h[k] = Set.new }) { |prices, t|
+      prices[t.level_label] << t.amount_cents; prices
+    }
+    expected = {"General Admission" => Set.new([3000]), "Rush Tickets" => Set.new([1000])}
+    assert_equal expected, prices_charged_by_level
+  end
+
+  def test_total_revenue_cents_only_counts_completed_tickets
+    setup_josephine_tickets_fixtures
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",
+                         :response => fixture_path("v2-public-forms-560625"))
+    form = WebconnexAPI::Form.find(560625)
+    tickets = WebconnexAPI::Ticket.all_for_form(form)
+
+    # sanity check our fixtures... and business model lol
+    assert_operator form.total_revenue_cents, :>, 1000_00
+
+    expected = tickets.sum(&:amount_cents) - tickets.reject(&:completed?).sum(&:amount_cents)
+    assert_equal expected, form.total_revenue_cents
   end
 end

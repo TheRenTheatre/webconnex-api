@@ -87,6 +87,18 @@ class WebconnexAPI::Form
     completed_tickets.select(&:past?).count
   end
 
+  def total_revenue_cents
+    completed_tickets.sum(&:amount_cents)
+  end
+
+  def upcoming_revenue_cents
+    completed_tickets.select(&:upcoming?).sum(&:amount_cents)
+  end
+
+  def past_revenue_cents
+    completed_tickets.select(&:past?).sum(&:amount_cents)
+  end
+
   # n.b. the 'quantity' fields change retrospectively when you adjust in the web
   # interface. So be careful making assumptions about old shows if you increase
   # capacity during a run.

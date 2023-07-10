@@ -54,6 +54,7 @@ class WebconnexAPI::Ticket
     end
   end
 
+  # This is present for tickets to forms with the 'multiple' event_type.
   def event_label
     @data_from_json["eventLabel"]
   end
@@ -66,7 +67,17 @@ class WebconnexAPI::Ticket
     event_date <= Time.now
   end
 
+  # This is the human-readable version, like "General Admission"
   def level_label
     @data_from_json["levelLabel"]
+  end
+
+  # This is the computery version, like "adult"
+  def level_key
+    @data_from_json["levelKey"]
+  end
+
+  def amount_cents
+    (@data_from_json["amount"].to_f * 100).to_i
   end
 end
