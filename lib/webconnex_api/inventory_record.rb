@@ -71,11 +71,14 @@ class WebconnexAPI::InventoryRecord < OpenStruct
             %Q{but no "eventStart" set on the Form. That's not implemented yet.}
     elsif form.recurring? && form.event_start? && event_has_date_but_no_time? &&
             single_performance_sales_record_for_first_performance?
-      # When we set up a recurring form, set the form's "event start" to the first
-      # performance's start time, set a recurring schedule, but don't add time
-      # slots, the inventory record keys will only have a date, no time. For the
-      # first recurring performance, we can infer the time from the "event start".
-      # After that, probably safer not to.
+      # Special case: when we set up a recurring form, set the form's "event
+      # start" to the first performance's start time, set a recurring schedule,
+      # but don't add time slots, the inventory record keys will only have a
+      # date, no time. For the first recurring performance, we can infer the
+      # time from the form's "event start". After that, probably safer not to.
+      #
+      # TODO: this is a complicated edge case that adds a lot of complexity here
+      # and elsewhere. Which show caused this issue and is there a simpler way?
       changed = form.event_start.change(year:  time_from_key_in_event_tz.year,
                                         month: time_from_key_in_event_tz.month,
                                         day:   time_from_key_in_event_tz.day)
