@@ -52,7 +52,32 @@ class TestWebconnexAPIInventoryRecord < Minitest::Test
     end
   end
 
-  def test_event_time_for_events_with_date_but_no_time
-    skip "these also raise"
+  def test_event_time_for_inventory_record_keys_with_date_but_no_time
+    skip
+  end
+
+  def test_event_time_and_related_behavior_for_single_events
+    # The inventory records for forms with eventType = "single" don't have keys,
+    # which is where we'd usually find the datetime info for an individual
+    # performance when starting with an Inventory Record. Instead, it falls back
+    # to the Form's eventStart.
+    resp = fixture_path("v2-public-forms-582221")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582221", :response => resp)
+    resp = fixture_path("v2-public-forms-582221-inventory")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/582221/inventory", :response => resp)
+
+    irs = WebconnexAPI::InventoryRecord.all_by_form_id(582221)
+    assert_equal 3, irs.count  # one overall, two ticket levels
+
+    irs.each do |ir|
+      assert ir.form.single?
+      assert ir.single_performance_sales_record?
+      assert ir.single_performance_sales_record_for_first_performance?
+      assert (ir.single_performance_total_sales_record? ||
+              ir.single_performance_ticket_level_sales_record?)
+
+      assert_equal Time.parse("2023-04-18 20:00:00 -0400"), ir.form.event_start
+      assert_equal Time.parse("2023-04-18 20:00:00 -0400"), ir.event_time
+    end
   end
 end

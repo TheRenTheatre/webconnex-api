@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Date: Mon, 10 Jul 2023 03:33:36 GMT
+Content-Type: application/json; charset=UTF-8
+Content-Length: 486
+Connection: keep-alive
+Access-Control-Expose-Headers: 
+X-Burst-Limit: 900
+X-Burst-Limit-Reset: 1688950332
+X-Burst-Remaining: 899
+X-Daily-Limit: 10000
+X-Daily-Limit-Reset: 1689033599
+X-Daily-Remaining: 9991
+
+{"responseCode":200,"data":[{"path":"tickets","name":"tickets","sold":47,"quantity":130,"dateCreated":"2023-03-23T01:28:39Z","dateUpdated":"2023-04-18T23:39:15Z"},{"path":"tickets.adult","name":"General Admission","sold":41,"quantity":124,"dateCreated":"2023-03-23T01:28:39Z","dateUpdated":"2023-04-18T23:39:15Z"},{"path":"tickets.ticketLevelTwo","name":"Cheap Tickets","sold":6,"quantity":6,"dateCreated":"2023-03-23T01:28:39Z","dateUpdated":"2023-04-18T23:25:16Z"}],"totalResults":3}

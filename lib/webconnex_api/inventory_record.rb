@@ -56,11 +56,6 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   def event_time
-    if !single_performance_sales_record?
-      raise "This Inventory Record is not related to an individual " +
-            "performance, so it doesn't have a time (#{self.inspect})"
-    end
-
     return @event_time if !@event_time.nil?
 
     # TODO: These fields don't have a TZ on them. Works great when this machine
@@ -68,12 +63,24 @@ class WebconnexAPI::InventoryRecord < OpenStruct
     # We could allow the user to configure this class with a TZ name to assume,
     # like "America/New_York"
 
-    # When we set up a recurring form, set the form's "event start" to the first
-    # performance's start time, set a recurring schedule, but don't add time
-    # slots, the inventory record keys will only have a date, no time. For the
-    # first recurring performance, we can infer the time from the "event start".
-    # After that, probably safer not to.
-    if form.recurring? && event_has_date_but_no_time? && form.time_zone? && form.event_start?
+    if !single_performance_sales_record?
+      # It's probably a mistake to call this method on a record not related to
+      # an individual performance.
+      raise "This Inventory Record is not related to an individual " +
+            "performance, so it doesn't have a time (#{self.inspect})"
+    elsif form.single? && form.event_start?
+      @event_time = form.event_start
+    elsif form.single? && !form.event_start?
+      # TODO: find out whether this is possible
+      raise %Q{This Inventory Record is for a Form with "eventType"="single", } +
+            %Q{but no "eventStart" set on the Form. That's not implemented yet.}
+    elsif form.recurring? && form.event_start? && event_has_date_but_no_time? &&
+            single_performance_sales_record_for_first_performance?
+      # When we set up a recurring form, set the form's "event start" to the first
+      # performance's start time, set a recurring schedule, but don't add time
+      # slots, the inventory record keys will only have a date, no time. For the
+      # first recurring performance, we can infer the time from the "event start".
+      # After that, probably safer not to.
       @event_time = form.event_start.change(year:  time_from_key.year,
                                             month: time_from_key.month,
                                             day:   time_from_key.day)
@@ -86,11 +93,7 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   def event_date
-    if event_has_date_but_no_time?
-      Time.strptime(key, key_format).to_date
-    else
-      event_time.to_date
-    end
+    event_time.to_date
   end
 
   def upcoming?
@@ -120,7 +123,7 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   def single_performance_sales_record?
-    !key.nil?
+    form.single? || !key.nil?
   end
 
   private def key_format
@@ -132,7 +135,19 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   private def time_from_key
+    raise "keys are blank for single events" if form.single?
     Time.strptime(key, key_format)
+  end
+
+  def single_performance_sales_record_for_first_performance?
+    return true if form.single?
+    return false if !single_performance_sales_record?
+
+    if event_has_date_but_no_time?
+      form.first_performance_date.to_date == time_from_key.to_date
+    else
+      form.first_performance_date == time_from_key
+    end
   end
 
   def overall_capacity_record?
@@ -144,6 +159,6 @@ class WebconnexAPI::InventoryRecord < OpenStruct
   end
 
   def single_performance_ticket_level_sales_record?
-    single_performance_sales_record? && path.starts_with?("tickets.")
+    single_performance_sales_record? && path.start_with?("tickets.")
   end
 end
