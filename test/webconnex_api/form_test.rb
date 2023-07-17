@@ -13,10 +13,22 @@ class TestWebconnexAPIForm < Minitest::Test
   # 481603 - one where we have inventory records fixtures as well (Lenox Ave)
   # 582034 - MM Cabaret Superstar 2023 - 'multiple' event-type with no structured event date data
 
+  def register_list_forms_responses
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
+                         :response => fixture_path("v2-public-forms-all"))
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms?startingAfter=50",
+                         :response => fixture_path("v2-public-forms-all-startingafter=50"))
+  end
+
   def test_find_does_not_raise
     resp = fixture_path("v2-public-forms-481581")
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481581", :response => resp)
     WebconnexAPI::Form.find(481581)
+  end
+
+  def test_all_can_return_more_than_a_page_of_results
+    register_list_forms_responses
+    assert_equal 61, WebconnexAPI::Form.all.count
   end
 
   def test_published_returns_false_when_published_path_is_missing
@@ -77,8 +89,7 @@ class TestWebconnexAPIForm < Minitest::Test
   end
 
   def test_ticket_levels_when_fields_arent_loaded
-    resp = fixture_path("v2-public-forms-all")
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms", :response => resp)
+    register_list_forms_responses
     forms = WebconnexAPI::Form.all
 
     form = forms.find { |f| f.id == 481603 }
@@ -148,8 +159,7 @@ class TestWebconnexAPIForm < Minitest::Test
   def test_event_type_on_object_from_collection
     # This is one of the fields that isn't returned in the List Forms API,
     # so this ensures that it's loaded when needed.
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
-                         :response => fixture_path("v2-public-forms-all"))
+    register_list_forms_responses
     forms = WebconnexAPI::Form.all
 
     lenoxes = forms.select { |f| f.published? && f.name == "Lenox Ave" }
@@ -166,8 +176,7 @@ class TestWebconnexAPIForm < Minitest::Test
   end
 
   def test_loading_builds_similar_object
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
-                         :response => fixture_path("v2-public-forms-all"))
+    register_list_forms_responses
     forms = WebconnexAPI::Form.all
     lenox_from_list_forms_api = forms.find { |f| f.id == 481603 }
     assert_equal "Lenox Ave", lenox_from_list_forms_api.name

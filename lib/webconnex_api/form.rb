@@ -5,6 +5,12 @@ class WebconnexAPI::Form
     json = WebconnexAPI.get_request("/forms")
     body = JSON.parse(json)
     data = body["data"]
+    while body["hasMore"]
+      query = "startingAfter=#{body['startingAfter']}"
+      json = WebconnexAPI.get_request("/forms", query: query)
+      body = JSON.parse(json)
+      data += body["data"]
+    end
     data.map { |form|
       self.new(form)
     }
