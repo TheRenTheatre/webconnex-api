@@ -84,6 +84,22 @@ class TestWebconnexAPITicket < Minitest::Test
     assert_equal expected, prices_charged_by_level
   end
 
+  def test_fee_cents_and_total_cents
+    setup_josephine_tickets_fixtures
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",
+                         :response => fixture_path("v2-public-forms-560625"))
+    form = WebconnexAPI::Form.find(560625)
+    tickets = WebconnexAPI::Ticket.all_for_form(form)
+
+    ticket = tickets.select { |t| t.level_label == "General Admission" }.sample
+
+    # math check... $2 processing fee, 6.5% sales tax on ticket price + processing fee
+    assert_equal 408, 200 + (3000 + 200) * 0.065
+
+    assert_equal 408,  ticket.fee_cents
+    assert_equal 3408, ticket.total_cents
+  end
+
   def test_total_revenue_cents_only_counts_completed_tickets
     setup_josephine_tickets_fixtures
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",

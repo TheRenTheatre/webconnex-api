@@ -80,4 +80,12 @@ class WebconnexAPI::Ticket
   def amount_cents
     (@data_from_json["amount"].to_f * 100).to_i
   end
+
+  def fee_cents
+    (@data_from_json["fee"].to_f * 100).to_i
+  end
+
+  def total_cents
+    (@data_from_json["total"].to_f * 100).to_i
+  end
 end
