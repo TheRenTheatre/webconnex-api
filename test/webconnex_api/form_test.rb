@@ -14,9 +14,9 @@ class TestWebconnexAPIForm < Minitest::Test
   # 582034 - MM Cabaret Superstar 2023 - 'multiple' event-type with no structured event date data
 
   def register_list_forms_responses
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms",
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms?product=ticketspice.com",
                          :response => fixture_path("v2-public-forms-all"))
-    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms?startingAfter=50",
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms?product=ticketspice.com&startingAfter=50",
                          :response => fixture_path("v2-public-forms-all-startingafter=50"))
   end
 
@@ -183,7 +183,7 @@ class TestWebconnexAPIForm < Minitest::Test
 
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/481603",
                               :response => fixture_path("v2-public-forms-481603"))
-    lenox_from_view_form_api = WebconnexAPI::Form.find(481603)
+    lenox_from_view_form_api = WebconnexAPI::Form.find(481603, reload: true)
     assert_equal "Lenox Ave", lenox_from_view_form_api.name
 
     refute_equal lenox_from_view_form_api.instance_variable_get(:@data_from_json),

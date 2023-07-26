@@ -28,6 +28,7 @@ optparse = OptionParser.new do |parser|
   parser.on("-f", "--[no-]form-details", "Print internal details (Form's ID, eventType, startTime)")
   parser.on(      "--[no-]inventory-records", "Print more internal details (inventory record listing)")
   parser.on(      "--year YEAR", "Limit results to this calendar year")
+  parser.on(      "--[no-]upcoming-only", "Only print details for upcoming performances")
 end
 optparse.parse!(into: options)
 options.dup.each do |k, v|
@@ -67,6 +68,9 @@ elsif ENV["WEBCONNEX_API_KEY"] !~ /^[0-9a-f]{32}$/
 end
 WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 
+# This is your Redis DB number on localhost. I wouldn't re-use a database with
+# other data in it.
+WebconnexAPI.cache_options = {db: 2}
 
 def main(options)
   if ARGV.blank?
@@ -77,7 +81,8 @@ def main(options)
                                          year: options[:year],
                                          print_form_details: options[:form_details],
                                          print_inventory_records: options[:inventory_records],
-                                         print_ticket_levels: options[:ticket_levels])
+                                         print_ticket_levels: options[:ticket_levels],
+                                         print_upcoming_only: options[:upcoming_only])
   end
   exit 0 if successes.all?
   exit 1
@@ -98,6 +103,12 @@ def print_inventory_report_for_show_name(name, options)
 
   shows.each do |show|
     puts "#{show.name} (#{show.first_performance_date.year})"
+
+    if options[:print_upcoming_only] && show.last_performance_date < Time.now
+      puts "\n\n"
+      next 
+    end
+
     if options[:print_form_details]
       puts "          Form ID: \033[2;38m#{show.id}\e[0m"
       puts "       Event type: \033[2;38m#{show.event_type}\e[0m"
@@ -145,6 +156,11 @@ def print_inventory_report_for_show_name(name, options)
       if count > 0
         print "                      avg price: " + sprintf("$%6.2f", amount_cents / count / 100.0) +
               "      total: " + sprintf("$%#{revenue_width}.2f", amount_cents / 100.0)
+      end
+
+      if options[:print_upcoming_only] && total_ir.event_time <= Time.now
+        puts
+        next
       end
 
       # Ticket level breakdown

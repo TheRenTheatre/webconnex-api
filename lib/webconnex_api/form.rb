@@ -2,34 +2,90 @@
 
 class WebconnexAPI::Form
   def self.all
-    json = WebconnexAPI.get_request("/forms")
-    body = JSON.parse(json)
-    data = body["data"]
-    while body["hasMore"]
-      query = "startingAfter=#{body['startingAfter']}"
-      json = WebconnexAPI.get_request("/forms", query: query)
-      body = JSON.parse(json)
-      data += body["data"]
+    forms_from_cache = self.all_data_from_cache_by_id
+    forms_from_api   = self.all_new_data_from_list_api_by_id
+
+    if forms_from_api.any?
+      WebconnexAPI.cache.sadd("form-ids", *forms_from_api.keys)
     end
-    data.map { |form|
-      self.new(form)
-    }
+
+    (forms_from_cache.keys | forms_from_api.keys).map do |id|
+      cache_key = "form:#{id}"
+      merged = (forms_from_cache[id] || {}).merge(forms_from_api[id] || {})
+      if merged != forms_from_cache[id]
+        puts "cache update: #{cache_key}"
+        WebconnexAPI.cache.set(cache_key, merged.to_json)
+      end
+      self.new(merged)
+    end
   end
 
-  def self.find(id)
-    @@cache_by_id ||= {}
-    if @@cache_by_id.has_key?(id)
-      @@cache_by_id[id]
+  def self.all_data_from_cache_by_id
+    known_ids_from_cache = WebconnexAPI.cache.smembers("form-ids")
+    return {} if known_ids_from_cache.none?
+    cache_keys = known_ids_from_cache.map { |form_id| "form:#{form_id}" }
+    json_by_cache_key = WebconnexAPI.cache.mapped_mget(*cache_keys)
+    missing_keys = json_by_cache_key.select { |key, json| json.nil? }.keys
+    if missing_keys.any?
+      self.clear_cache
+      $stderr.puts <<-ERR
+                     Cache inconsistency: #{missing_keys.count} forms were marked as cached but are not
+                       actually present, e.g. cache keys like #{missing_keys[0..2].map(&:inspect).join(', ')} are missing.
+                       Better start over; we've just called `#{self}.clear_cache` and are now exiting.
+                   ERR
+      exit 1
+    end
+    json_by_cache_key.
+      transform_keys { |cache_key| cache_key[5..-1] }.
+      transform_values { |json| JSON.parse(json) }
+  end
+
+  def self.all_new_data_from_list_api_by_id
+    cache_last_updated = WebconnexAPI.cache.get("api-last-checked-at:list-forms")
+
+    path       = "/forms"
+    base_query = "product=ticketspice.com"
+    base_query += "&dateUpdatedAfter=#{cache_last_updated}" if !cache_last_updated.nil?
+
+    forms_from_api = {}
+    time_check_started = Time.now
+    json = WebconnexAPI.get_request(path, query: base_query)
+    body = JSON.parse(json)
+    body["data"].each { |f| forms_from_api[f["id"]] = f }
+    while body["hasMore"] && body["totalResults"] > 0
+      query = base_query + "&startingAfter=#{body['startingAfter']}"
+      json = WebconnexAPI.get_request(path, query: query)
+      body = JSON.parse(json)
+      body["data"].each { |f| forms_from_api[f["id"]] = f }
+    end
+
+    WebconnexAPI.cache.set("api-last-checked-at:list-forms", time_check_started.utc.xmlschema)
+
+    forms_from_api
+  end
+
+  def self.find(id, options = {})
+    # TODO: restore in-memory cache so there's only one Ruby object floating around for each ID?
+    cache_key = "form:#{id}"
+    if !options[:reload] && json = WebconnexAPI.cache.get(cache_key)
+      data = JSON.parse(json)
     else
       json = WebconnexAPI.get_request("/forms/#{id}")
       body = JSON.parse(json)
       data = body["data"]
-      @@cache_by_id[id] = self.new(data)
+      WebconnexAPI.cache.set(cache_key, data.to_json)
+      WebconnexAPI.cache.sadd("form-ids", id)
+      puts "cache update: #{cache_key}"
     end
+    self.new(data)
   end
 
   def self.clear_cache
-    @@cache_by_id = {}
+    form_ids = WebconnexAPI.cache.smembers("form-ids")
+    WebconnexAPI.cache.del("form-ids")
+    cache_keys = form_ids.map { |id| "form:#{id}" }
+    WebconnexAPI.cache.del(*cache_keys)
+    WebconnexAPI.cache.del("api-last-checked-at:list-forms")
   end
 
   def initialize(hash_from_json)
@@ -79,6 +135,11 @@ class WebconnexAPI::Form
   def first_performance_date
     # This is actually the date of the first performance with any tickets sold
     completed_tickets.map(&:event_date).sort.first
+  end
+
+  def last_performance_date
+    # This is actually the date of the last performance with any tickets sold
+    completed_tickets.map(&:event_date).sort.last
   end
 
   def total_tickets_sold
@@ -254,7 +315,7 @@ class WebconnexAPI::Form
     # can have. The big "fields" object is a reasonable one to check.
     return true if @data_from_json["fields"].present?
 
-    myself = self.class.find(id)
+    myself = self.class.find(id, reload: true)
     @data_from_json = myself.instance_variable_get(:@data_from_json)
   end
 end

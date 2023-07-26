@@ -5,12 +5,35 @@ require 'json'
 require 'date'
 require 'time'
 require 'tzinfo'
-require "active_support/core_ext/time/calculations"
+require 'active_support/core_ext/time/calculations'
+require 'redis'
 
 module WebconnexAPI
   class Error < StandardError; end
 
   ENDPOINT = "https://api.webconnex.com/v2/public"
+
+  class << self
+    def cache_options=(opts)
+      @cache_options = opts
+    end
+
+    def cache
+      return @cache if defined?(@cache)
+
+      @cache_options ||= {}
+      if @cache_options[:db].nil?
+        raise "Please set a Redis DB explicitly as a best practice " +
+              "to avoid test/staging/production catastrophes. Example:\n" +
+              "  WebconnexAPI.cache_options = {db: 15}  \# 15 is test\n\n"
+      end
+
+      @cache = Redis.new(@cache_options)
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+      raise e, "Error: could not connect to Redis. Here are the options passed, " +
+               "the rest are defaults: #{@cache_options.inspect}"
+    end
+  end
 
   def self.get_request(path, query: nil)
     uri = URI(WebconnexAPI::ENDPOINT + path)

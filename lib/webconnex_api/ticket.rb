@@ -2,23 +2,66 @@
 
 class WebconnexAPI::Ticket
   def self.all_for_form(form)
+    tickets_from_cache = self.all_data_from_cache_by_id_for_form(form)
+    tickets_from_api   = self.all_new_ticket_data_from_api_by_id_for_form(form)
+
+    if tickets_from_api.any?
+      WebconnexAPI.cache.sadd("form:#{form.id}:ticket-ids", *tickets_from_api.keys)
+    end
+
+    (tickets_from_cache.keys | tickets_from_api.keys).map do |id|
+      cache_key = "ticket:#{id}"
+      merged = (tickets_from_cache[id] || {}).merge(tickets_from_api[id] || {})
+      if merged != tickets_from_cache[id]
+        puts "cache update: #{cache_key}"
+        WebconnexAPI.cache.set(cache_key, merged.to_json)
+      end
+      self.new(merged, form: form)
+    end
+  end
+
+  def self.all_data_from_cache_by_id_for_form(form)
+    known_ids_from_cache = WebconnexAPI.cache.smembers("form:#{form.id}:ticket-ids")
+    return {} if known_ids_from_cache.none?
+    cache_keys = known_ids_from_cache.map { |ticket_id| "ticket:#{ticket_id}" }
+    WebconnexAPI.cache.mapped_mget(*cache_keys).
+      transform_keys { |cache_key| cache_key[7..-1] }.
+      transform_values { |json| JSON.parse(json) }
+  end
+
+  def self.all_new_ticket_data_from_api_by_id_for_form(form)
+    cache_last_updated = WebconnexAPI.cache.get("api-last-checked-at:tickets-for-form-#{form.id}")
+
     path = "/search/tickets"
     base_query = "product=ticketspice.com&formId=#{form.id}"
+    base_query += "&dateUpdatedAfter=#{cache_last_updated}" if !cache_last_updated.nil?
+
+    tickets_from_api = {}
+    time_check_started = Time.now
     json = WebconnexAPI.get_request(path, query: base_query)
     body = JSON.parse(json)
-    data = body["data"]
-    requests = 1
-    while body["hasMore"]
+    body["data"].each { |t| tickets_from_api[t["id"]] = t }
+    while body["hasMore"] && body["totalResults"] > 0
       query = base_query + "&startingAfter=#{body['startingAfter']}"
       json = WebconnexAPI.get_request(path, query: query)
       body = JSON.parse(json)
-      data += body["data"]
-      requests += 1
-      # sleep 0.1 * requests
+      body["data"].each { |t| tickets_from_api[t["id"]] = t }
     end
-    data.map { |ticket|
-      self.new(ticket, form: form)
-    }
+
+    WebconnexAPI.cache.set("api-last-checked-at:tickets-for-form-#{form.id}", time_check_started.utc.xmlschema)
+
+    tickets_from_api
+  end
+
+  def self.clear_cache
+    sets_of_forms_fkeys = WebconnexAPI.cache.keys("form:*:ticket-ids")
+    WebconnexAPI.cache.del(*sets_of_forms_fkeys)
+
+    json_ticket_keys = WebconnexAPI.cache.keys("ticket:*")
+    WebconnexAPI.cache.del(*json_ticket_keys)
+
+    timestamps_of_searches = WebconnexAPI.cache.keys("api-last-checked-at:tickets-for-form-*")
+    WebconnexAPI.cache.del(*timestamps_of_searches)
   end
 
   def initialize(hash_from_json, form: nil)

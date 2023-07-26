@@ -8,6 +8,8 @@ if ENV["WEBCONNEX_API_KEY"] != ""
   WEBCONNEX_API_KEY = ENV["WEBCONNEX_API_KEY"]
 end
 
+WebconnexAPI.cache_options = {db: 2}
+
 # You can add fixtures and/or initialization code here to make experimenting
 # with your gem easier. You can also use a different console, if you like.
 
