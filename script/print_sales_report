@@ -27,7 +27,7 @@ optparse = OptionParser.new do |parser|
   parser.on(      "--[no-]ticket-levels", "Include a ticket breakdown by ticket level")
   parser.on("-f", "--[no-]form-details", "Print internal details (Form's ID, eventType, startTime)")
   parser.on(      "--[no-]inventory-records", "Print more internal details (inventory record listing)")
-  parser.on(      "--year YEAR", "Limit results to this calendar year")
+  parser.on(      "--year YEAR", "Limit results to shows running in this year")
   parser.on(      "--[no-]upcoming-only", "Only print details for upcoming performances")
 end
 optparse.parse!(into: options)
@@ -93,7 +93,10 @@ def print_inventory_report_for_show_name(name, options)
   shows = forms.select { |f| f.name.downcase == name.downcase &&
                              f.published? }.reverse
   if options[:year].present?
-    shows = shows.select { |f| options[:year].to_s == f.first_performance_date.year.to_s }
+    shows = shows.select { |f|
+      (f.first_performance_date.year..f.last_performance_date.year).
+        include?(options[:year].to_i)
+    }
   end
 
   if shows.none?
