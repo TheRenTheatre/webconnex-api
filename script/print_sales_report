@@ -188,7 +188,78 @@ def print_inventory_report_for_show_name(name, options)
         end
         print "\n                        54: #{show_count.to_s.rjust(3)}\n" +
               "            54 After-Hours: #{ah_count.to_s.rjust(3)}"
+
+      elsif options[:print_ticket_levels] && show.name == "Nosf3ratu"
+        labels_that_mean_nos =  ["General Admission",
+                                 "Nosferatu + VBar Cover",
+                                 "Nosferatu AND VBar Cover",
+                                 "Nosferatu  AND VBar Cover",
+                                 "Nosferatu & Vbar Cover",
+                                 "Double Discount Tickets",
+                                 "DOUBLE DISCOUNT Tickets",
+                                 "Nosferatu Only",
+                                 "Nosferatu Only Discount Tickets",
+                                 "Nosferatu Only DISCOUNT Tickets",
+                                 "V(IP) Experience",
+                                 "The Fang Bangers Club",
+                                 "The Blood Bath Pass"]
+        labels_that_mean_vbar = ["Nosferatu + VBar Cover",
+                                 "Nosferatu AND VBar Cover",
+                                 "Nosferatu  AND VBar Cover",
+                                 "Nosferatu & Vbar Cover",
+                                 "Double Discount Tickets",
+                                 "DOUBLE DISCOUNT Tickets",
+                                 "V(IP) Experience",
+                                 "VBar Cover Only",
+                                 "Vbar Cover Only!",
+                                 "VBar Cover Only Discount Tickets",
+                                 "The Fang Bangers Club",
+                                 "The Blood Bath Pass",
+                                 "VBar star"]
+        labels_that_are_passes = ["The Fang Bangers Club",
+                                  "VBar star",
+                                  "The Blood Bath Pass"]
+
+        show_count = ah_count = pass_count = 0
+        label_to_data.each do |level_label, level_data|
+          show_count += level_data[:count] if labels_that_mean_nos.include?(level_label)
+          ah_count   += level_data[:count] if labels_that_mean_vbar.include?(level_label)
+          pass_count += level_data[:count] if labels_that_are_passes.include?(level_label)
+          raise "Unknown ticket level: #{level_label.inspect}" unless (labels_that_mean_nos + labels_that_mean_vbar + labels_that_are_passes).include?(level_label)
+        end
+
+        print "\n                 Nosferatu: #{show_count.to_s.rjust(3)}"
+        print "\n                      VBar: #{ah_count.to_s.rjust(3)}"
+                # + "  New passes (incl. above): #{pass_count.to_s.rjust(3)}"
+
+      elsif options[:print_ticket_levels] && show.name == "The Office Holiday Party Musical Extravaganza Show" && show.event_start.year == 2023
+        labels_that_mean_ohp =   ["Office Holiday Party + The Late Night Holiday Drag Exxxtravaganza Show",
+                                  "Office Party + The Late Night Holiday Drag Exxxtravaganza Show",
+                                  "VIP Ticket",
+                                  "VIP Ticket to Both Shows",
+                                  "Office Holiday Party Only",
+                                  "Office Party Only"]
+        labels_that_mean_wln =   ["Office Holiday Party + The Late Night Holiday Drag Exxxtravaganza Show",
+                                  "Office Party + The Late Night Holiday Drag Exxxtravaganza Show",
+                                  "VIP Ticket",
+                                  "VIP Ticket to Both Shows",
+                                  "The Winter Late Night Party Drag Exxxtravaganza Show: Cover Only",
+                                  "The Winter Late Night Holiday Drag Exxxtravaganza Show:  Cover Only."]
+        labels_that_are_passes = []
+
+        show_count = ah_count = pass_count = 0
+        label_to_data.each do |level_label, level_data|
+          show_count += level_data[:count] if labels_that_mean_ohp.include?(level_label)
+          ah_count   += level_data[:count] if labels_that_mean_wln.include?(level_label)
+          pass_count += level_data[:count] if labels_that_are_passes.include?(level_label)
+          raise "Unknown ticket level: #{level_label.inspect}" unless (labels_that_mean_ohp + labels_that_mean_wln + labels_that_are_passes).include?(level_label)
+        end
+
+        print "\n                       OHP: #{show_count.to_s.rjust(3)}" unless show_count.zero?
+        print "\n                      WLNP: #{ah_count.to_s.rjust(3)}"
+                # + "  New passes (incl. above): #{pass_count.to_s.rjust(3)}"
       end
+
       if options[:print_ticket_levels]
         puts
         label_to_data.sort_by { |l, d| -d[:count] }.each do |level_label, level_data|
@@ -197,6 +268,8 @@ def print_inventory_report_for_show_name(name, options)
                 ", sub-total: " + sprintf("$%7.2f", level_data[:total_amount_cents] / 100.0) + ")\e[0m"
         end
         puts "\n\n"
+      else
+        puts
       end
 
       last_date = this_date
