@@ -142,6 +142,10 @@ class WebconnexAPI::Form
     completed_tickets.map(&:event_date).sort.last
   end
 
+  def any_performances_during_year?(year)
+    (first_performance_date.year..last_performance_date.year).include?(year.to_i)
+  end
+
   def total_tickets_sold
     completed_tickets.count
   end

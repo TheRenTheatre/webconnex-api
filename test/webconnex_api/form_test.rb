@@ -242,4 +242,16 @@ class TestWebconnexAPIForm < Minitest::Test
     assert_equal "2023-04-04T00:00:00Z", form.instance_variable_get(:@data_from_json)["eventStart"]
     assert_equal "2023-04-03 20:00:00 -0400", form.event_start.to_s
   end
+
+  def test_any_performances_during_year
+    setup_josephine_tickets_fixtures
+    resp = fixture_path("v2-public-forms-560625--with-limited-supply-on-for-default-ticket-level")
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625", :response => resp)
+
+    form = WebconnexAPI::Form.find(560625)
+
+    refute form.any_performances_during_year?(2022)
+    assert form.any_performances_during_year?(2023)
+    refute form.any_performances_during_year?(2024)
+  end
 end
