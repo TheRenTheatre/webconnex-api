@@ -101,6 +101,8 @@ def print_inventory_report_for_show_name(name, options)
     return false
   end
 
+  puts "#{shows.count} show#{'s' unless shows.one?} matched.\n\n"
+
   shows.each do |show|
     puts "#{show.name} (#{show.first_performance_date.year})"
 

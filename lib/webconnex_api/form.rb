@@ -9,6 +9,7 @@ class WebconnexAPI::Form
       WebconnexAPI.cache.sadd("form-ids", *forms_from_api.keys)
     end
 
+    # These keys are integers (so far), but we handle them as strings for safety
     (forms_from_cache.keys | forms_from_api.keys).map do |id|
       cache_key = "form:#{id}"
       merged = (forms_from_cache[id] || {}).merge(forms_from_api[id] || {})
@@ -51,12 +52,12 @@ class WebconnexAPI::Form
     time_check_started = Time.now
     json = WebconnexAPI.get_request(path, query: base_query)
     body = JSON.parse(json)
-    body["data"].each { |f| forms_from_api[f["id"]] = f }
+    body["data"].each { |f| forms_from_api[f["id"].to_s] = f }
     while body["hasMore"] && body["totalResults"] > 0
       query = base_query + "&startingAfter=#{body['startingAfter']}"
       json = WebconnexAPI.get_request(path, query: query)
       body = JSON.parse(json)
-      body["data"].each { |f| forms_from_api[f["id"]] = f }
+      body["data"].each { |f| forms_from_api[f["id"].to_s] = f }
     end
 
     WebconnexAPI.cache.set("api-last-checked-at:list-forms", time_check_started.utc.xmlschema)
