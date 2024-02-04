@@ -20,6 +20,16 @@ class TestWebconnexAPITicket < Minitest::Test
     assert_equal 594, form.tickets.count
   end
 
+  def test_id
+    setup_josephine_tickets_fixtures
+    FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",
+                         :response => fixture_path("v2-public-forms-560625"))
+    form = WebconnexAPI::Form.find(560625)
+    ids = form.tickets.map(&:id).sort
+    assert_equal 39763331, ids.first
+    assert_equal 41069322, ids.last
+  end
+
   def test_upcoming
     setup_josephine_tickets_fixtures
     FakeWeb.register_uri(:get, "https://api.webconnex.com/v2/public/forms/560625",

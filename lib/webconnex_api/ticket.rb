@@ -71,6 +71,10 @@ class WebconnexAPI::Ticket
 
   attr_reader :form
 
+  def id
+    @data_from_json["id"]
+  end
+
   def status
     @data_from_json["status"]
   end
